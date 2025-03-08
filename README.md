@@ -35,7 +35,7 @@ your repo access and to practice PR'ing with your team *before* you start
 coding!
 
 - Teammate name #1: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
-- Eoin McDonnell [GitHub](https://github.com/oldmcdonnell) / [LinkedIn](https://linkedin.com/in/mcdonnell-eoin)
+- Eoin McDonnell [GitHub](https://github.com/oldmcdonnell) / [LinkedIn](https://linkedin.com/in/mcdonnell.eoin)
 - Teammate name #2: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
 
 
