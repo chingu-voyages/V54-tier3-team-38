@@ -7,6 +7,8 @@ function App() {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
 
   useEffect(() => {
+    console.log("🌍 API Base URL:", import.meta.env.VITE_BASE_URL);
+    
     testConnection();
 
     fetchSiteData().then((data) => {
@@ -14,6 +16,7 @@ function App() {
       setSiteData(data);
     });
   }, []);
+  
 
   return (
     <div>
