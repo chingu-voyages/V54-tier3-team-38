@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 interface DefaultElementProps {
@@ -52,6 +52,48 @@ const gridSize = 10;
 const CELL_SIZE = 50;
 
 function App() {
+  useEffect(() => {
+    const savedData = localStorage.getItem("gridEditorState");
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+
+        // Make sure your parsed object has the structure you expect
+        // before setting each piece of state.
+        if (parsed.gridState) {
+          setGridState(parsed.gridState);
+        }
+        if (parsed.jsonGridState) {
+          setJsonGridState(parsed.jsonGridState);
+        }
+        // If you really want to keep `saveStatus` or `draggedElement` across sessions, do so:
+        if (parsed.saveStatus) {
+          setSaveStatus(parsed.saveStatus);
+        }
+        if (parsed.draggedElement) {
+          setDraggedElement(parsed.draggedElement);
+        }
+      } catch (error) {
+        console.error("Error parsing saved localStorage data:", error);
+      }
+    }
+  }, []);
+
+  const saveAllStateToLocalStorage = () => {
+    const dataToStore = {
+      saveStatus,
+      gridState,
+      jsonGridState,
+      draggedElement,
+    };
+    try {
+      localStorage.setItem("gridEditorState", JSON.stringify(dataToStore));
+      console.log("State saved to localStorage!");
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
+  };
+
   const [saveStatus, setSaveStatus] = useState<string>("");
   const [gridState, setGridState] = useState<(Cell | null)[][]>(
     Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
@@ -127,7 +169,6 @@ function App() {
     );
     const rowOffset = dragRow - row;
     const columnOffset = dragCol - column;
-    console.log(dragRow, dragCol, row, column);
 
     setDraggedElement({
       id: target.dataset.id || "",
@@ -139,10 +180,63 @@ function App() {
       columnOffset,
     });
   }
+  function isIntersectingOtherElement(targetCell: HTMLDivElement): boolean {
+    let offsetX = 0;
+    let offsetY = 0;
+    if (draggedElement) {
+      if (draggedElement.row && draggedElement.column) {
+        if (draggedElement.row != -1) {
+          offsetX = draggedElement.columnOffset;
+          offsetY = draggedElement.rowOffset;
+        }
+        const { row: dropRow, column: dropColumn } = getCoordinates(
+          Number(targetCell.dataset.key)
+        );
+        // console.log(
+        //   draggedElement.row,
+        //   draggedElement.column,
+        //   draggedElement.rowOffset,
+        //   draggedElement.columnOffset,
+        //   draggedElement.width,
+        //   draggedElement.height,
+        //   dropColumn
+        // );
+        for (
+          let i = dropRow - offsetY;
+          i < dropRow - offsetY + draggedElement.height;
+          i++
+        ) {
+          for (
+            let j = dropColumn - offsetX;
+            j < dropColumn - offsetX + draggedElement.width;
+            j++
+          ) {
+            if (
+              jsonGridState["layout"][i][j] !== "" &&
+              (draggedElement.row < 0 ||
+                jsonGridState["layout"][draggedElement.row][
+                  draggedElement.column
+                ] !== jsonGridState["layout"][i][j])
+            ) {
+              console.log(jsonGridState["layout"][i][j]);
+
+              console.log(`intersection found at ${i},${j}`);
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     let targetCell = e.target as HTMLDivElement;
+    if (isIntersectingOtherElement(targetCell)) {
+      return;
+    }
+    //console.log(draggedElement);
     if (targetCell.dataset.width || targetCell.dataset.defaultwidth) {
       const elements = document.elementsFromPoint(e.clientX, e.clientY);
       if (elements.length > 1) {
@@ -258,6 +352,7 @@ function App() {
     width: number,
     height: number
   ) {
+    saveAllStateToLocalStorage();
     setGridState((prevGrid) => {
       const newGrid = prevGrid.map((row) => [...row]);
       // Clear previous positions if already placed.
@@ -289,6 +384,19 @@ function App() {
 
       return newGrid;
     });
+  }
+  function parseStyleString(styleString: string): React.CSSProperties {
+    const style: React.CSSProperties = {};
+    styleString.split(";").forEach((rule) => {
+      const [property, value] = rule.split(":");
+      if (property && value) {
+        const camelKey = property
+          .trim()
+          .replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+        (style as Record<string, any>)[camelKey] = value.trim();
+      }
+    });
+    return style;
   }
 
   function clearOldPositions(
@@ -352,6 +460,67 @@ function App() {
       content,
       styles,
     };
+  }
+  function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
+    const layout = json.layout;
+    const rows = layout.length;
+    const cols = layout[0]?.length || 0;
+    // Initialize the grid with null values.
+    const grid: (Cell | null)[][] = Array.from({ length: rows }, () =>
+      Array(cols).fill(null)
+    );
+    // A helper matrix to track which cells have been processed.
+    const visited: boolean[][] = Array.from({ length: rows }, () =>
+      Array(cols).fill(false)
+    );
+
+    // Loop over each cell in the layout.
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        if (visited[i][j]) continue;
+        const cellValue = layout[i][j];
+        // If the cell is empty, mark as visited and continue.
+        if (cellValue === "") {
+          visited[i][j] = true;
+          continue;
+        }
+        // The cell value is of the form "elementId.instance"
+        const [elementId] = cellValue.split(".");
+
+        // Determine the width by checking contiguous cells to the right that share the same value.
+        let width = 1;
+        while (j + width < cols && layout[i][j + width] === cellValue) {
+          width++;
+        }
+
+        // Determine the height by checking subsequent rows.
+        let height = 1;
+        outer: while (i + height < rows) {
+          for (let k = 0; k < width; k++) {
+            if (layout[i + height][j + k] !== cellValue) {
+              break outer;
+            }
+          }
+          height++;
+        }
+
+        // Fill in the grid for this element.
+        for (let r = i; r < i + height; r++) {
+          for (let c = j; c < j + width; c++) {
+            grid[r][c] = {
+              id: elementId,
+              width,
+              height,
+              row: i, // top-left row of the element
+              column: j, // top-left column of the element
+              main: r === i && c === j,
+            };
+            visited[r][c] = true;
+          }
+        }
+      }
+    }
+    return grid;
   }
 
   function allowDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -417,7 +586,7 @@ function App() {
           height: CELL_SIZE,
           border: "1px solid gray",
           boxSizing: "border-box",
-          backgroundColor: "blue",
+          backgroundColor: "black",
           color: "white",
           display: "flex",
           alignItems: "center",
@@ -439,6 +608,9 @@ function App() {
         }}
       >
         {gridState.flat().map((cell, i) => {
+          // Compute the cell's row and column using your getCoordinates helper.
+          const { row, column } = getCoordinates(i);
+
           return (
             <div
               key={i}
@@ -457,103 +629,131 @@ function App() {
                 backgroundColor: cell ? "lightblue" : "white",
               }}
             >
-              {cell && cell.main && (
-                <div
-                  draggable={true}
-                  onDragStart={handleDragStart}
-                  onDragOver={allowDrop}
-                  onDrop={handleDrop}
-                  data-id={cell.id}
-                  data-key={i.toString()}
-                  data-defaultwidth={cell.width}
-                  data-defaultheight={cell.height}
-                  style={{
-                    width: cell.width * CELL_SIZE,
-                    height: cell.height * CELL_SIZE,
-                    backgroundColor: "blue",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "grab",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    zIndex: 10,
-                  }}
-                >
-                  {cell.id}
-                  {/* Resizers */}
-                  <div
-                    data-resizer="left"
-                    draggable={true}
-                    onDragStart={handleResizeDrag}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleResizeDrop}
-                    style={{
-                      position: "absolute",
-                      width: "8px",
-                      height: "50%",
-                      backgroundColor: "grey",
-                      border: "1px solid black",
-                      cursor: "ew-resize",
-                      left: "-4px",
-                      top: "25%",
-                    }}
-                  />
-                  <div
-                    data-resizer="right"
-                    draggable={true}
-                    onDragStart={handleResizeDrag}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleResizeDrop}
-                    style={{
-                      position: "absolute",
-                      width: "8px",
-                      height: "50%",
-                      backgroundColor: "grey",
-                      border: "1px solid black",
-                      cursor: "ew-resize",
-                      right: "-4px",
-                      top: "25%",
-                    }}
-                  />
-                  <div
-                    data-resizer="top"
-                    draggable={true}
-                    onDragStart={handleResizeDrag}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleResizeDrop}
-                    style={{
-                      position: "absolute",
-                      width: "50%",
-                      height: "8px",
-                      backgroundColor: "grey",
-                      border: "1px solid black",
-                      cursor: "ns-resize",
-                      top: "-4px",
-                      left: "25%",
-                    }}
-                  />
-                  <div
-                    data-resizer="bottom"
-                    draggable={true}
-                    onDragStart={handleResizeDrag}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleResizeDrop}
-                    style={{
-                      position: "absolute",
-                      width: "50%",
-                      height: "8px",
-                      backgroundColor: "grey",
-                      border: "1px solid black",
-                      cursor: "ns-resize",
-                      bottom: "-4px",
-                      left: "25%",
-                    }}
-                  />
-                </div>
-              )}
+              {cell &&
+                cell.main &&
+                (() => {
+                  const uniqueId =
+                    jsonGridState.layout[row] &&
+                    jsonGridState.layout[row][column]
+                      ? jsonGridState.layout[row][column]
+                      : cell.id;
+                  const defaultContent =
+                    jsonGridState.content[uniqueId] || cell.id;
+                  const defaultStyleString =
+                    jsonGridState.styles[uniqueId] || "";
+                  const parsedStyles = parseStyleString(defaultStyleString);
+
+                  return (
+                    <div
+                      draggable={true}
+                      onDragStart={handleDragStart}
+                      onDragOver={allowDrop}
+                      onDrop={handleDrop}
+                      data-id={cell.id}
+                      data-key={i.toString()}
+                      onClick={() => {
+                        setDraggedElement({
+                          id: cell.id,
+                          row: cell.row,
+                          column: cell.column,
+                          width: cell.width,
+                          height: cell.height,
+                          // no resizing in a simple click scenario
+                          resizing: undefined,
+                          // defaults for click since there's no drag offset
+                          rowOffset: 0,
+                          columnOffset: 0,
+                        });
+                      }}
+                      data-defaultwidth={cell.width}
+                      data-defaultheight={cell.height}
+                      style={{
+                        width: cell.width * CELL_SIZE,
+                        height: cell.height * CELL_SIZE,
+                        ...parsedStyles,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "grab",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 10,
+                      }}
+                    >
+                      {defaultContent}
+
+                      <div
+                        data-resizer="left"
+                        draggable={true}
+                        onDragStart={handleResizeDrag}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleResizeDrop}
+                        style={{
+                          position: "absolute",
+                          width: "8px",
+                          height: "50%",
+                          backgroundColor: "grey",
+                          border: "1px solid black",
+                          cursor: "ew-resize",
+                          left: "-4px",
+                          top: "25%",
+                        }}
+                      />
+                      <div
+                        data-resizer="right"
+                        draggable={true}
+                        onDragStart={handleResizeDrag}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleResizeDrop}
+                        style={{
+                          position: "absolute",
+                          width: "8px",
+                          height: "50%",
+                          backgroundColor: "grey",
+                          border: "1px solid black",
+                          cursor: "ew-resize",
+                          right: "-4px",
+                          top: "25%",
+                        }}
+                      />
+                      <div
+                        data-resizer="top"
+                        draggable={true}
+                        onDragStart={handleResizeDrag}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleResizeDrop}
+                        style={{
+                          position: "absolute",
+                          width: "50%",
+                          height: "8px",
+                          backgroundColor: "grey",
+                          border: "1px solid black",
+                          cursor: "ns-resize",
+                          top: "-4px",
+                          left: "25%",
+                        }}
+                      />
+                      <div
+                        data-resizer="bottom"
+                        draggable={true}
+                        onDragStart={handleResizeDrag}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={handleResizeDrop}
+                        style={{
+                          position: "absolute",
+                          width: "50%",
+                          height: "8px",
+                          backgroundColor: "grey",
+                          border: "1px solid black",
+                          cursor: "ns-resize",
+                          bottom: "-4px",
+                          left: "25%",
+                        }}
+                      />
+                    </div>
+                  );
+                })()}
             </div>
           );
         })}
