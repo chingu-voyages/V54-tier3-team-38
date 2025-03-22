@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useState } from "react";
+import { Canvas } from "./components/Canvas";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [saveStatus, setSaveStatus] = useState<string>("");
+
+  useEffect(() => {
+    const savedStatus = localStorage.getItem("saveStatus");
+    if (savedStatus) {
+      setSaveStatus(savedStatus);
+    }
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaveStatus("Saving...");
+      // ...some logic to POST to server...
+      // const response = await fetch("http://localhost:3000/generate", { ... })
+      // etc.
+      setSaveStatus(`✅ Saved! View at: http://localhost:3000/view/123`);
+      localStorage.setItem("saveStatus", `✅ Saved!`);
+    } catch (error) {
+      console.error("Save error:", error);
+      setSaveStatus("❌ Failed to connect to the server.");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+    <div style={{ padding: "1rem" }}>
+      <h2>Grid Layout Editor</h2>
+      <button onClick={handleSave}>Save Grid</button>
+      {saveStatus && (
+        <p
+          style={{
+            fontWeight: "bold",
+            color: saveStatus.includes("❌") ? "red" : "green",
+          }}
+        >
+          {saveStatus}
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      )}
+      <Canvas />
+    </div>
+  );
 }
 
-export default App
+export default App;
