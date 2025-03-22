@@ -18,6 +18,7 @@ npm run dev
 
 - Erica Holden: [GitHub](https://github.com/ericadev) / [LinkedIn](https://linkedin.com/in/ericadev)
 - Eoin McDonnell [GitHub](https://github.com/oldmcdonnell) / [LinkedIn](https://linkedin.com/in/mcdonnell.eoin)
+- Daniel Fromm [Github](https://github.com/dfromm91) / [LnkedIn](www.linkedin.com/in/daniel-fromm-297788274)
 
 
 # React + TypeScript + Vite
