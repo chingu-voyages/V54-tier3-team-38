@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "./api/siteDataApi";
-import { SiteData } from "./types/siteData";
+import { SiteData } from "./types/SiteData";
 import TestConnection from "./components/TestConnection"; // 👈 import the new component
 
 function App() {
