@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { fetchSiteData } from "./api/siteDataApi";
-import { SiteData } from "./types/siteData";
+import { fetchAssets } from "./api/assetApi";
+import { Asset } from "./types/asset";
 import TestConnection from "./components/TestConnection"; // 👈 import the new component
 import { Canvas } from "./components/Canvas";
+
 function App() {
-  const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [viewCanvas, setViewCanvas] = useState<boolean>(false);
+  const [assetData, setAssetData] = useState<Asset | null>(null);
 
   useEffect(() => {
-    fetchSiteData().then((data) => {
-      console.log("📡 Site Data:", data);
-      setSiteData(data);
-    });
+    const fetchData = async () => {
+      const assets = await fetchAssets();
+      setAssetData(assets);
+    }
+    fetchData();
   }, []);
 
   return (
@@ -33,8 +35,8 @@ function App() {
           <h1>Testing API Connection</h1>
           <TestConnection /> {/* 👈 background API ping */}
           <p>Check the console for API responses.</p>
-          {siteData ? (
-            <pre>{JSON.stringify(siteData, null, 2)}</pre>
+          {assetData ? (
+            <pre>{JSON.stringify(assetData, null, 2)}</pre>
           ) : (
             <p>Loading site data...</p>
           )}
