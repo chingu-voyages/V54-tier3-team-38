@@ -23,7 +23,7 @@ function App() {
       >
         {`Click Here to View the ${viewCanvas ? "api test" : "canvas"}`}
       </button>
-      {viewCanvas ? (
+      {!viewCanvas ? (
         <div>
           <h1>Testing API Connection</h1>
           <TestConnection /> {/* 👈 background API ping */}
@@ -41,7 +41,7 @@ function App() {
           <Canvas />
         </div>
       )}
-      );
+      ;
     </>
   );
 }
