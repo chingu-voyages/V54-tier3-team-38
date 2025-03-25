@@ -14,7 +14,7 @@ function App() {
       setAssetData(assets);
     }
     fetchData();
-  })
+  }, []);
 
   return (
     <>
