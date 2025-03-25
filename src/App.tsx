@@ -23,7 +23,12 @@ function App() {
       >
         {`Click Here to View the ${viewCanvas ? "api test" : "canvas"}`}
       </button>
-      {!viewCanvas ? (
+      {viewCanvas ? (
+        <div style={{ padding: "1rem" }}>
+          <h2>Grid Layout Editor</h2>
+          <Canvas />
+        </div>
+      ) : (
         <div>
           <h1>Testing API Connection</h1>
           <TestConnection /> {/* 👈 background API ping */}
@@ -33,12 +38,6 @@ function App() {
           ) : (
             <p>Loading site data...</p>
           )}
-        </div>
-      ) : (
-        <div style={{ padding: "1rem" }}>
-          <h2>Grid Layout Editor</h2>
-
-          <Canvas />
         </div>
       )}
       ;
