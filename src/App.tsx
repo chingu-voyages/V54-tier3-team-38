@@ -12,7 +12,7 @@ function App() {
     const fetchData = async () => {
       const assets = await fetchAssets();
       setAssetData(assets);
-    }
+    };
     fetchData();
   }, []);
 
