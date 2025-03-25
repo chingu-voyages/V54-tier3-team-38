@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { IconButton, Snackbar, TextField } from "@mui/material";
+import { Close } from "@mui/icons-material";
+import Button from "./Button";
 import {
   Cell,
   JSONGridState,
@@ -19,6 +22,7 @@ import {
   handleResizeDrag,
   handleDrop,
 } from "../dragAndDropHandlers";
+import { postGrid } from "../api/backendService";
 
 /**
  * Our Canvas component. It manages the grid layout state, plus
@@ -39,6 +43,11 @@ export const Canvas: React.FC = () => {
   const [draggedElement, setDraggedElement] = useState<DraggedElement | null>(
     null
   );
+
+  const [pageName, setPageName] = useState("Default Name");
+  const [pageDescription, setPageDescription] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
     const savedData = localStorage.getItem("gridEditorState");
@@ -124,21 +133,38 @@ export const Canvas: React.FC = () => {
     });
   }
 
+  const saveGrid = async () => {
+    try {
+      await postGrid(pageName, pageDescription, jsonGridState);
+      setSnackbarMessage("Data was saved successfully. Thank you!");
+      setSnackbarOpen(true);
+    } catch (e) {
+      setSnackbarMessage("There was an error posting data, please try again.");
+      setSnackbarOpen(true);
+    }
+  }
+  
+  const handleSnackbarClose = () => setSnackbarOpen(false)
+
+  const closeSnackbarAction = (
+    <>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={handleSnackbarClose}
+      >
+        <Close />
+      </IconButton>
+  </>
+  );
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <h3>JSON Grid Representation:</h3>
-      <pre
-        style={{
-          whiteSpace: "pre",
-          fontFamily: "monospace",
-          overflowX: "auto",
-          maxHeight: "300px",
-          border: "1px solid #ccc",
-          padding: "10px",
-        }}
-      >
-        {JSON.stringify(jsonGridState, null, 2)}
-      </pre>
+      <TextField label="Name" value={pageName} onChange={e=>setPageName(e.target.value)} />
+      <TextField label="Description" value={pageDescription} onChange={e=>setPageDescription(e.target.value)} />
+
+      <Button onClick={saveGrid} label="Save Grid" />
 
       {/* Example of a draggable element "toolbox" outside the grid */}
       <div
@@ -353,6 +379,7 @@ export const Canvas: React.FC = () => {
           );
         })}
       </div>
+      <Snackbar open={snackbarOpen} message={snackbarMessage} autoHideDuration={3000} action={closeSnackbarAction} />
     </div>
   );
 };

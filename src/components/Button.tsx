@@ -1,4 +1,5 @@
 import React from "react";
+import { Button as MuiButton } from "@mui/material";
 
 interface ButtonProps {
   label: string;
@@ -6,7 +7,7 @@ interface ButtonProps {
 }
 
 const Button: React.FC<ButtonProps> = ({ label, onClick }) => {
-  return <button onClick={onClick}>{label}</button>;
+  return <MuiButton onClick={onClick}>{label}</MuiButton>;
 };
 
 export default Button;
