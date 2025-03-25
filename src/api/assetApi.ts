@@ -1,5 +1,5 @@
 import { api } from "./backendService";
-import { Asset  } from "@/types/asset";
+import { Asset  } from "../types/Asset";
 
 export const fetchAssets = async (): Promise<Asset | null> => {
   try {

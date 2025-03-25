@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAssets } from "./api/assetApi";
-import { Asset } from "./types/asset";
+import { Asset } from "./types/Asset";
 import TestConnection from "./components/TestConnection"; // 👈 import the new component
 import { Canvas } from "./components/Canvas";
 
@@ -12,7 +12,7 @@ function App() {
     const fetchData = async () => {
       const assets = await fetchAssets();
       setAssetData(assets);
-    }
+    };
     fetchData();
   }, []);
 
