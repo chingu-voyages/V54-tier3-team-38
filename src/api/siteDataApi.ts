@@ -1,5 +1,5 @@
 import { api } from "./backendService";
-import { SiteData  } from "@/types/SiteData";
+import { SiteData  } from "@/types/siteData";
 
 export const fetchSiteData = async (): Promise<SiteData | null> => {
   try {
