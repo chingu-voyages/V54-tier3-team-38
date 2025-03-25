@@ -13,7 +13,7 @@ export const api = axios.create({  // ✅ Export api as a named export
 // Test backend connection
 export const testConnection = async () => {
   try {
-    const response = await api.get("/health"); // Adjust endpoint
+    const response = await api.get("/api/health"); // Adjust endpoint
     console.log("✅ Backend Connected:", response.data);
     return response.data;
   } catch (error) {

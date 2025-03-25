@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { testConnection } from "./api/backendService";
-import { fetchSiteData } from "./api/siteDataApi";
-import { SiteData } from "./types/siteData";
+import { fetchAssets } from "./api/assetApi";
+import { Asset } from "./types/asset";
 
 function App() {
-  const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const [siteData, setSiteData] = useState<Asset[] | null>(null);
 
   useEffect(() => {
     console.log("🌍 API Base URL:", import.meta.env.VITE_BASE_URL);
     
     testConnection();
 
-    fetchSiteData().then((data) => {
+    fetchAssets().then((data: Asset[]) => {
       console.log("📡 Site Data:", data);
       setSiteData(data);
     });
