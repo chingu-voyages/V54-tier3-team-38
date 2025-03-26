@@ -142,9 +142,9 @@ export const Canvas: React.FC = () => {
       setSnackbarMessage("There was an error posting data, please try again.");
       setSnackbarOpen(true);
     }
-  }
-  
-  const handleSnackbarClose = () => setSnackbarOpen(false)
+  };
+
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const closeSnackbarAction = (
     <>
@@ -156,230 +156,248 @@ export const Canvas: React.FC = () => {
       >
         <Close />
       </IconButton>
-  </>
+    </>
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <TextField label="Name" value={pageName} onChange={e=>setPageName(e.target.value)} />
-      <TextField label="Description" value={pageDescription} onChange={e=>setPageDescription(e.target.value)} />
-
-      <Button onClick={saveGrid} label="Save Grid" />
-
-      {/* Example of a draggable element "toolbox" outside the grid */}
-      <div
-        data-id="h2"
-        data-key="-1"
-        data-defaultheight={2}
-        data-defaultwidth={3}
-        draggable={true}
-        onDragStart={(e) => handleDragStart(e, setDraggedElement)}
-        style={{
-          width: CELL_SIZE,
-          height: CELL_SIZE,
-          border: "1px solid gray",
-          boxSizing: "border-box",
-          backgroundColor: "black",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "grab",
-          marginBottom: "10px",
+    <>
+      <Button
+        onClick={() => {
+          localStorage.removeItem("gridEditorState");
+          window.location.reload(); // or manually reset state if you prefer
         }}
-      >
-        h2
+        label="Reset Editor"
+      />
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <TextField
+          label="Name"
+          value={pageName}
+          onChange={(e) => setPageName(e.target.value)}
+        />
+        <TextField
+          label="Description"
+          value={pageDescription}
+          onChange={(e) => setPageDescription(e.target.value)}
+        />
+
+        <Button onClick={saveGrid} label="Save Grid" />
+
+        {/* Flex layout: toolbox on left, grid on right */}
+        <div style={{ display: "flex", gap: "2rem" }}>
+          {/* Toolbox */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              maxHeight: "600px",
+              overflowY: "auto",
+              border: "1px solid #ccc",
+              padding: "0.5rem",
+              minWidth: "120px",
+            }}
+          >
+            {Object.entries(defaultElementProps).map(
+              ([element, { styles, defaultWidth, defaultHeight }]) => (
+                <div
+                  key={element}
+                  data-id={element}
+                  data-key="-1"
+                  data-defaultheight={defaultHeight}
+                  data-defaultwidth={defaultWidth}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, setDraggedElement)}
+                  style={{
+                    width: 80,
+                    height: 40,
+                    border: "1px solid gray",
+                    boxSizing: "border-box",
+                    cursor: "grab",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.8rem",
+                    textTransform: "uppercase",
+                    ...parseStyleString(styles),
+                  }}
+                >
+                  {element}
+                </div>
+              )
+            )}
+          </div>
+
+          {/* The grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${gridSize}, ${CELL_SIZE}px)`,
+              gridTemplateRows: `repeat(${gridSize}, ${CELL_SIZE}px)`,
+              gap: "2px",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {gridState.flat().map((cell, i) => {
+              const row = Math.floor(i / gridSize);
+              const column = i % gridSize;
+
+              return (
+                <div
+                  key={i}
+                  data-key={i.toString()}
+                  onDrop={(e) =>
+                    handleDrop(
+                      e,
+                      draggedElement,
+                      jsonGridState,
+                      updateGridState,
+                      setDraggedElement
+                    )
+                  }
+                  onDragOver={allowDrop}
+                  style={{
+                    width: CELL_SIZE,
+                    height: CELL_SIZE,
+                    border: "1px solid gray",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    backgroundColor: cell ? "lightblue" : "white",
+                  }}
+                >
+                  {cell &&
+                    cell.main &&
+                    (() => {
+                      const uniqueId =
+                        jsonGridState.layout[row] &&
+                        jsonGridState.layout[row][column]
+                          ? jsonGridState.layout[row][column]
+                          : cell.id;
+                      const defaultContent =
+                        jsonGridState.content[uniqueId] || cell.id;
+                      const defaultStyleString =
+                        jsonGridState.styles[uniqueId] || "";
+                      const parsedStyles = parseStyleString(defaultStyleString);
+
+                      return (
+                        <div
+                          draggable={true}
+                          onDragStart={(e) =>
+                            handleDragStart(e, setDraggedElement)
+                          }
+                          onDragOver={allowDrop}
+                          onDrop={(e) =>
+                            handleDrop(
+                              e,
+                              draggedElement,
+                              jsonGridState,
+                              updateGridState,
+                              setDraggedElement
+                            )
+                          }
+                          data-id={cell.id}
+                          data-key={i.toString()}
+                          onMouseDown={() => {
+                            const newDragged = {
+                              id: cell.id,
+                              row: cell.row,
+                              column: cell.column,
+                              width: cell.width,
+                              height: cell.height,
+                              resizing: undefined,
+                              rowOffset: 0,
+                              columnOffset: 0,
+                            };
+                            setDraggedElement(newDragged);
+                            saveAllStateToLocalStorage(
+                              gridState,
+                              jsonGridState,
+                              newDragged
+                            );
+                          }}
+                          data-defaultwidth={cell.width}
+                          data-defaultheight={cell.height}
+                          style={{
+                            width: cell.width * CELL_SIZE,
+                            height: cell.height * CELL_SIZE,
+                            ...parsedStyles,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "grab",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            zIndex: 10,
+                          }}
+                        >
+                          <div
+                            dangerouslySetInnerHTML={{ __html: defaultContent }}
+                          />
+
+                          {/* Resizers */}
+                          {["left", "right", "top", "bottom"].map((dir) => {
+                            const isHorizontal =
+                              dir === "left" || dir === "right";
+                            return (
+                              <div
+                                key={dir}
+                                data-resizer={dir}
+                                draggable={true}
+                                onDragStart={(e) =>
+                                  handleResizeDrag(e, setDraggedElement)
+                                }
+                                onDragOver={(ev) => ev.preventDefault()}
+                                style={{
+                                  position: "absolute",
+                                  width: isHorizontal ? "8px" : "50%",
+                                  height: isHorizontal ? "50%" : "8px",
+                                  backgroundColor: "grey",
+                                  border: "1px solid black",
+                                  cursor:
+                                    dir === "left" || dir === "right"
+                                      ? "ew-resize"
+                                      : "ns-resize",
+                                  ...(dir === "left" && {
+                                    left: "-4px",
+                                    top: "25%",
+                                  }),
+                                  ...(dir === "right" && {
+                                    right: "-4px",
+                                    top: "25%",
+                                  }),
+                                  ...(dir === "top" && {
+                                    top: "-4px",
+                                    left: "25%",
+                                  }),
+                                  ...(dir === "bottom" && {
+                                    bottom: "-4px",
+                                    left: "25%",
+                                  }),
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <Snackbar
+          open={snackbarOpen}
+          message={snackbarMessage}
+          autoHideDuration={3000}
+          action={closeSnackbarAction}
+        />
       </div>
-
-      {/* The grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${gridSize}, ${CELL_SIZE}px)`,
-          gridTemplateRows: `repeat(${gridSize}, ${CELL_SIZE}px)`,
-          gap: "2px",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        {gridState.flat().map((cell, i) => {
-          const row = Math.floor(i / gridSize);
-          const column = i % gridSize;
-
-          return (
-            <div
-              key={i}
-              data-key={i.toString()}
-              onDrop={(e) =>
-                handleDrop(
-                  e,
-                  draggedElement,
-                  jsonGridState,
-                  updateGridState,
-                  setDraggedElement
-                )
-              }
-              onDragOver={allowDrop}
-              style={{
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-                border: "1px solid gray",
-                boxSizing: "border-box",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                backgroundColor: cell ? "lightblue" : "white",
-              }}
-            >
-              {cell &&
-                cell.main &&
-                (() => {
-                  const uniqueId =
-                    jsonGridState.layout[row] &&
-                    jsonGridState.layout[row][column]
-                      ? jsonGridState.layout[row][column]
-                      : cell.id;
-                  const defaultContent =
-                    jsonGridState.content[uniqueId] || cell.id;
-                  const defaultStyleString =
-                    jsonGridState.styles[uniqueId] || "";
-                  const parsedStyles = parseStyleString(defaultStyleString);
-
-                  return (
-                    <div
-                      draggable={true}
-                      onDragStart={(e) => handleDragStart(e, setDraggedElement)}
-                      onDragOver={allowDrop}
-                      onDrop={(e) =>
-                        handleDrop(
-                          e,
-                          draggedElement,
-                          jsonGridState,
-                          updateGridState,
-                          setDraggedElement
-                        )
-                      }
-                      data-id={cell.id}
-                      data-key={i.toString()}
-                      onMouseDown={() => {
-                        // Save the newly clicked/selected element
-                        const newDragged = {
-                          id: cell.id,
-                          row: cell.row,
-                          column: cell.column,
-                          width: cell.width,
-                          height: cell.height,
-                          resizing: undefined,
-                          rowOffset: 0,
-                          columnOffset: 0,
-                        };
-                        setDraggedElement(newDragged);
-                        saveAllStateToLocalStorage(
-                          gridState,
-                          jsonGridState,
-                          newDragged
-                        );
-                        console.log(draggedElement);
-                      }}
-                      data-defaultwidth={cell.width}
-                      data-defaultheight={cell.height}
-                      style={{
-                        width: cell.width * CELL_SIZE,
-                        height: cell.height * CELL_SIZE,
-                        ...parsedStyles,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "grab",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        zIndex: 10,
-                      }}
-                    >
-                      {defaultContent}
-                      {/* Resizers */}
-                      <div
-                        data-resizer="left"
-                        draggable={true}
-                        onDragStart={(e) =>
-                          handleResizeDrag(e, setDraggedElement)
-                        }
-                        onDragOver={(ev) => ev.preventDefault()}
-                        style={{
-                          position: "absolute",
-                          width: "8px",
-                          height: "50%",
-                          backgroundColor: "grey",
-                          border: "1px solid black",
-                          cursor: "ew-resize",
-                          left: "-4px",
-                          top: "25%",
-                        }}
-                      />
-                      <div
-                        data-resizer="right"
-                        draggable={true}
-                        onDragStart={(e) =>
-                          handleResizeDrag(e, setDraggedElement)
-                        }
-                        onDragOver={(ev) => ev.preventDefault()}
-                        style={{
-                          position: "absolute",
-                          width: "8px",
-                          height: "50%",
-                          backgroundColor: "grey",
-                          border: "1px solid black",
-                          cursor: "ew-resize",
-                          right: "-4px",
-                          top: "25%",
-                        }}
-                      />
-                      <div
-                        data-resizer="top"
-                        draggable={true}
-                        onDragStart={(e) =>
-                          handleResizeDrag(e, setDraggedElement)
-                        }
-                        onDragOver={(ev) => ev.preventDefault()}
-                        style={{
-                          position: "absolute",
-                          width: "50%",
-                          height: "8px",
-                          backgroundColor: "grey",
-                          border: "1px solid black",
-                          cursor: "ns-resize",
-                          top: "-4px",
-                          left: "25%",
-                        }}
-                      />
-                      <div
-                        data-resizer="bottom"
-                        draggable={true}
-                        onDragStart={(e) =>
-                          handleResizeDrag(e, setDraggedElement)
-                        }
-                        onDragOver={(ev) => ev.preventDefault()}
-                        style={{
-                          position: "absolute",
-                          width: "50%",
-                          height: "8px",
-                          backgroundColor: "grey",
-                          border: "1px solid black",
-                          cursor: "ns-resize",
-                          bottom: "-4px",
-                          left: "25%",
-                        }}
-                      />
-                    </div>
-                  );
-                })()}
-            </div>
-          );
-        })}
-      </div>
-      <Snackbar open={snackbarOpen} message={snackbarMessage} autoHideDuration={3000} action={closeSnackbarAction} />
-    </div>
+    </>
   );
 };
