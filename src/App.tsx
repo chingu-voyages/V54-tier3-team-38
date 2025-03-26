@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAssets } from "./api/assetApi";
-import { Asset } from "@/types/Asset";
+import { Asset } from "@/types/asset";
 import TestConnection from "./components/TestConnection"; // 👈 import the new component
 import { Canvas } from "./components/Canvas";
 
@@ -42,7 +42,6 @@ function App() {
           )}
         </div>
       )}
-      ;
     </>
   );
 }

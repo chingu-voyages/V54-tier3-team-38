@@ -1,5 +1,5 @@
-import { api } from "./backendService";
-import { Asset } from "@/types/Asset";
+import { api } from "./client";
+import { Asset } from "@/types/asset";
 
 // Create a new asset
 export const createAsset = async (assetData: Partial<Asset>): Promise<Asset> => {

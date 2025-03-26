@@ -1,7 +1,7 @@
 // src/components/TestConnection.tsx
 
 import { useEffect } from "react";
-import { testConnection } from "../api/backendService";
+import { testConnection } from "../api/test";
 
 const TestConnection = () => {
   useEffect(() => {
