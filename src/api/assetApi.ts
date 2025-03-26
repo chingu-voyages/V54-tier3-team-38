@@ -1,12 +1,6 @@
 import { api } from "./backendService";
 import { Asset } from "@/types/Asset";
 
-// Fetch all assets
-export const fetchAssets = async (): Promise<Asset[]> => {
-  const response = await api.get<Asset[]>("/assets/");
-  return response.data;
-};
-
 // Create a new asset
 export const createAsset = async (assetData: Partial<Asset>): Promise<Asset> => {
   const response = await api.post<Asset>("/assets/", assetData);
@@ -17,3 +11,14 @@ export const createAsset = async (assetData: Partial<Asset>): Promise<Asset> => 
 export const deleteAsset = async (assetId: number): Promise<void> => {
   await api.delete(`/assets/${assetId}`);
 };
+
+export const fetchAssets = async (): Promise<Asset | null> => {
+  try {
+    const response = await api.get<Asset>("/api/assets/");
+    console.log("✅ Assets Data Fetched:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Assets Data Fetch Failed:", error);
+    return null;
+  }
+}
