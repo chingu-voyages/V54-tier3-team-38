@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { IconButton, Snackbar, TextField } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import Button from "./Button";
@@ -12,7 +13,7 @@ import {
 } from "../types/canvasTypes";
 import {
   parseStyleString,
-  generateJsonGrid,
+  generateJsonGrid, // updated generateJsonGrid accepts extra arguments
   clearOldPositions,
   getCoordinates,
 } from "../utils";
@@ -24,10 +25,11 @@ import {
 } from "../dragAndDropHandlers";
 import { postGrid } from "../api/backendService";
 
-/**
- * Our Canvas component. It manages the grid layout state, plus
- * loading / saving from localStorage.
- */
+interface ActiveEditor {
+  id: string; // unique id for this element instance
+  type: string; // e.g., "h2", "footer", etc.
+}
+
 export const Canvas: React.FC = () => {
   const [gridState, setGridState] = useState<(Cell | null)[][]>(
     Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
@@ -43,18 +45,19 @@ export const Canvas: React.FC = () => {
   const [draggedElement, setDraggedElement] = useState<DraggedElement | null>(
     null
   );
-
   const [pageName, setPageName] = useState("Default Name");
   const [pageDescription, setPageDescription] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  // Tracks which element's editor should be shown.
+  const [activeEditor, setActiveEditor] = useState<ActiveEditor | null>(null);
 
   useEffect(() => {
     const savedData = localStorage.getItem("gridEditorState");
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // Make sure your parsed object has the structure you expect
         if (parsed.gridState) {
           setGridState(parsed.gridState);
         }
@@ -82,7 +85,6 @@ export const Canvas: React.FC = () => {
     };
     try {
       localStorage.setItem("gridEditorState", JSON.stringify(dataToStore));
-      // console.log("State saved to localStorage!");
     } catch (error) {
       console.error("Error saving to localStorage:", error);
     }
@@ -96,15 +98,10 @@ export const Canvas: React.FC = () => {
     height: number
   ) {
     setGridState((prevGrid) => {
-      // 1. Copy current grid
       const newGrid = prevGrid.map((row) => [...row]);
-
-      // 2. Clear old positions
       if (draggedElem.row >= 0 && draggedElem.column >= 0) {
         clearOldPositions(newGrid, draggedElem);
       }
-
-      // 3. Place the element in new cells
       for (let r = 0; r < height; r++) {
         for (let c = 0; c < width; c++) {
           const rowIdx = newRow + r;
@@ -121,14 +118,15 @@ export const Canvas: React.FC = () => {
           }
         }
       }
-
-      // 4. Generate an updated JSON representation
-      const newJson = generateJsonGrid(newGrid, defaultElementProps);
+      // Use the existing jsonGridState.content and .styles to preserve edits.
+      const newJson = generateJsonGrid(
+        newGrid,
+        defaultElementProps,
+        jsonGridState.content,
+        jsonGridState.styles
+      );
       setJsonGridState(newJson);
-
-      // 5. Save to localStorage
       saveAllStateToLocalStorage(newGrid, newJson, draggedElement);
-
       return newGrid;
     });
   }
@@ -147,16 +145,14 @@ export const Canvas: React.FC = () => {
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const closeSnackbarAction = (
-    <>
-      <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
-        onClick={handleSnackbarClose}
-      >
-        <Close />
-      </IconButton>
-    </>
+    <IconButton
+      size="small"
+      aria-label="close"
+      color="inherit"
+      onClick={handleSnackbarClose}
+    >
+      <Close />
+    </IconButton>
   );
 
   return (
@@ -164,7 +160,7 @@ export const Canvas: React.FC = () => {
       <Button
         onClick={() => {
           localStorage.removeItem("gridEditorState");
-          window.location.reload(); // or manually reset state if you prefer
+          window.location.reload();
         }}
         label="Reset Editor"
       />
@@ -299,26 +295,12 @@ export const Canvas: React.FC = () => {
                               setDraggedElement
                             )
                           }
+                          // When clicked, set this element as active so its editor appears.
+                          onClick={() =>
+                            setActiveEditor({ id: uniqueId, type: cell.id })
+                          }
                           data-id={cell.id}
                           data-key={i.toString()}
-                          onMouseDown={() => {
-                            const newDragged = {
-                              id: cell.id,
-                              row: cell.row,
-                              column: cell.column,
-                              width: cell.width,
-                              height: cell.height,
-                              resizing: undefined,
-                              rowOffset: 0,
-                              columnOffset: 0,
-                            };
-                            setDraggedElement(newDragged);
-                            saveAllStateToLocalStorage(
-                              gridState,
-                              jsonGridState,
-                              newDragged
-                            );
-                          }}
                           data-defaultwidth={cell.width}
                           data-defaultheight={cell.height}
                           style={{
@@ -328,7 +310,7 @@ export const Canvas: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            cursor: "grab",
+                            cursor: "pointer", // indicates clickable
                             position: "absolute",
                             top: 0,
                             left: 0,
@@ -336,10 +318,10 @@ export const Canvas: React.FC = () => {
                           }}
                         >
                           <div
-                            dangerouslySetInnerHTML={{ __html: defaultContent }}
+                            dangerouslySetInnerHTML={{
+                              __html: defaultContent,
+                            }}
                           />
-
-                          {/* Resizers */}
                           {["left", "right", "top", "bottom"].map((dir) => {
                             const isHorizontal =
                               dir === "left" || dir === "right";
@@ -398,6 +380,48 @@ export const Canvas: React.FC = () => {
           action={closeSnackbarAction}
         />
       </div>
+
+      {/* Render the active editor in a fixed sidebar via a portal */}
+      {ReactDOM.createPortal(
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            width: "300px",
+            height: "100vh",
+            overflowY: "auto",
+            padding: "1rem",
+            borderLeft: "1px solid #ccc",
+            backgroundColor: "#f9f9f9",
+            zIndex: 1000,
+          }}
+        >
+          {activeEditor ? (
+            (() => {
+              const elementDef = defaultElementProps[activeEditor.type];
+              if (elementDef && elementDef.editor) {
+                const EditorComponent = elementDef.editor;
+                return (
+                  <EditorComponent
+                    key={activeEditor.id}
+                    elementId={activeEditor.id}
+                    jsonGridState={jsonGridState}
+                    setJsonGridState={setJsonGridState}
+                    setActiveEditor={setActiveEditor}
+                    gridState={gridState}
+                    setGridState={setGridState}
+                  />
+                );
+              }
+              return <p>No editor available for {activeEditor.type}.</p>;
+            })()
+          ) : (
+            <p>Click an element on the grid to edit it.</p>
+          )}
+        </div>,
+        document.body
+      )}
     </>
   );
 };
