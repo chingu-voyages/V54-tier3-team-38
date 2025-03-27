@@ -1,4 +1,3 @@
-import React from "react";
 import DeleteElementButton from "./DeleteElementButton";
 import { EditorProps } from "../types/canvasTypes";
 

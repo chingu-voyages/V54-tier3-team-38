@@ -1,4 +1,4 @@
-import Button from "./Button"; // or your MUI Button, etc.
+import Button from "./Button";
 import { Cell, JSONGridState } from "../types/canvasTypes";
 
 interface DeleteButtonProps {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 
