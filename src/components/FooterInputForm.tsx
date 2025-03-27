@@ -1,5 +1,6 @@
-import { EditorProps } from "../types/canvasTypes"; // adjust path as needed
+import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
+import { TextField } from "@mui/material";
 
 const FooterInputForm: React.FC<EditorProps> = ({
   elementId,
@@ -36,27 +37,28 @@ const FooterInputForm: React.FC<EditorProps> = ({
     >
       <h3>&lt;footer&gt; Editor: {elementId}</h3>
 
-      {/* Content Field */}
-      <label>
-        Content:
-        <textarea
-          value={content}
-          onChange={(e) => handleChange("content", e.target.value)}
-          style={{ width: "100%", marginBottom: "0.5rem" }}
-        />
-      </label>
+      <TextField
+        label="Content"
+        variant="outlined"
+        value={content}
+        onChange={(e) => handleChange("content", e.target.value)}
+        fullWidth
+        multiline
+        rows={2}
+        margin="normal"
+      />
 
-      {/* Styles Field */}
-      <label>
-        Styles:
-        <textarea
-          value={styles}
-          onChange={(e) => handleChange("styles", e.target.value)}
-          style={{ width: "100%" }}
-        />
-      </label>
+      <TextField
+        label="Styles"
+        variant="outlined"
+        value={styles}
+        onChange={(e) => handleChange("styles", e.target.value)}
+        fullWidth
+        multiline
+        rows={4}
+        margin="normal"
+      />
 
-      {/* Delete Button */}
       <DeleteElementButton
         elementId={elementId}
         gridState={gridState}

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
+import { TextField, Button } from "@mui/material";
 
 function parseNavLinks(html: string): Array<{ url: string; text: string }> {
   const anchorRegex = /<a\s+href=["'](.*?)["']>(.*?)<\/a>/gi;
@@ -36,7 +37,7 @@ const NavInputForm: React.FC<EditorProps> = ({
     () => jsonGridState.styles[elementId] || ""
   );
 
-  // Whenever links or styles change, update the main jsonGridState
+  // Update JSON grid state whenever links or styles change
   useEffect(() => {
     const newHtml = buildNavContent(links);
     setJsonGridState((prev) => ({
@@ -82,7 +83,6 @@ const NavInputForm: React.FC<EditorProps> = ({
     >
       <h3>&lt;nav&gt; Editor: {elementId}</h3>
 
-      {/* Each link displayed in a vertical form */}
       {links.map((link, i) => (
         <div
           key={i}
@@ -93,50 +93,52 @@ const NavInputForm: React.FC<EditorProps> = ({
             borderRadius: "4px",
           }}
         >
-          <label style={{ display: "block", marginBottom: "0.5rem" }}>
-            URL:
-            <input
-              type="text"
-              placeholder="URL"
-              value={link.url}
-              onChange={(e) => handleLinkChange(i, "url", e.target.value)}
-              style={{ width: "100%", marginTop: "0.3rem" }}
-            />
-          </label>
+          <TextField
+            label="URL"
+            variant="outlined"
+            value={link.url}
+            onChange={(e) => handleLinkChange(i, "url", e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Display Text"
+            variant="outlined"
+            value={link.text}
+            onChange={(e) => handleLinkChange(i, "text", e.target.value)}
+            fullWidth
+            margin="normal"
+          />
 
-          <label style={{ display: "block", marginBottom: "0.5rem" }}>
-            Display Text:
-            <input
-              type="text"
-              placeholder="Display Text"
-              value={link.text}
-              onChange={(e) => handleLinkChange(i, "text", e.target.value)}
-              style={{ width: "100%", marginTop: "0.3rem" }}
-            />
-          </label>
-
-          <button type="button" onClick={() => handleRemoveLink(i)}>
+          <Button
+            onClick={() => handleRemoveLink(i)}
+            variant="contained"
+            color="error"
+            style={{ marginTop: "0.5rem" }}
+          >
             Remove Link
-          </button>
+          </Button>
         </div>
       ))}
 
-      <button
-        type="button"
+      <Button
         onClick={handleAddLink}
+        variant="contained"
+        color="primary"
         style={{ marginBottom: "1rem" }}
       >
         + Add Link
-      </button>
+      </Button>
 
-      {/* Styles field */}
-      <label style={{ display: "block", marginBottom: "0.5rem" }}>
-        Styles:
-      </label>
-      <textarea
+      <TextField
+        label="Styles"
+        variant="outlined"
         value={styles}
         onChange={(e) => setStyles(e.target.value)}
-        style={{ width: "100%", marginBottom: "1rem", height: "4rem" }}
+        fullWidth
+        multiline
+        rows={4}
+        margin="normal"
       />
 
       <DeleteElementButton

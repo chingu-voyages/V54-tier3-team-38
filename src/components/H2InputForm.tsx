@@ -1,5 +1,6 @@
-import DeleteElementButton from "./DeleteElementButton";
 import { EditorProps } from "../types/canvasTypes";
+import DeleteElementButton from "./DeleteElementButton";
+import { TextField } from "@mui/material";
 
 const H2InputForm: React.FC<EditorProps> = ({
   elementId,
@@ -12,6 +13,7 @@ const H2InputForm: React.FC<EditorProps> = ({
   const content = jsonGridState.content[elementId] || "";
   const styles = jsonGridState.styles[elementId] || "";
 
+  // Update content/styles in JSON grid state
   const handleChange = (field: "content" | "styles", value: string) => {
     setJsonGridState((prev) => ({
       ...prev,
@@ -32,28 +34,31 @@ const H2InputForm: React.FC<EditorProps> = ({
         marginBottom: "1rem",
         border: "1px solid #ccc",
         padding: "1rem",
-        borderRadius: "4px",
       }}
     >
       <h3>&lt;h2&gt; Editor: {elementId}</h3>
 
-      <label>
-        Content:
-        <textarea
-          value={content}
-          onChange={(e) => handleChange("content", e.target.value)}
-          style={{ width: "100%", marginBottom: "0.5rem" }}
-        />
-      </label>
+      <TextField
+        label="Content"
+        variant="outlined"
+        value={content}
+        onChange={(e) => handleChange("content", e.target.value)}
+        fullWidth
+        multiline
+        rows={2}
+        margin="normal"
+      />
 
-      <label>
-        Styles:
-        <textarea
-          value={styles}
-          onChange={(e) => handleChange("styles", e.target.value)}
-          style={{ width: "100%" }}
-        />
-      </label>
+      <TextField
+        label="Styles"
+        variant="outlined"
+        value={styles}
+        onChange={(e) => handleChange("styles", e.target.value)}
+        fullWidth
+        multiline
+        rows={4}
+        margin="normal"
+      />
 
       <DeleteElementButton
         elementId={elementId}

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
+import { TextField, Button } from "@mui/material";
 
 function parseListItems(htmlString: string): string[] {
   const matchPattern = /<li>(.*?)<\/li>/g;
@@ -28,10 +29,11 @@ const UlInputForm: React.FC<EditorProps> = ({
   const [listItems, setListItems] = useState<string[]>(() =>
     parseListItems(originalHtml)
   );
-
   const [styles, setStyles] = useState(
     () => jsonGridState.styles[elementId] || ""
   );
+
+  // Whenever items or styles change, update JSON state
   useEffect(() => {
     const newHtml = buildUlContent(listItems);
     setJsonGridState((prev) => ({
@@ -74,41 +76,54 @@ const UlInputForm: React.FC<EditorProps> = ({
     >
       <h3>&lt;ul&gt; Editor: {elementId}</h3>
 
-      {/* Render each list item as a text field */}
       {listItems.map((item, index) => (
-        <div key={index} style={{ display: "flex", marginBottom: "0.5rem" }}>
-          <input
-            type="text"
+        <div
+          key={index}
+          style={{
+            marginBottom: "1rem",
+            padding: "0.5rem",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+          }}
+        >
+          <TextField
+            label={`List Item #${index + 1}`}
+            variant="outlined"
             value={item}
             onChange={(e) => handleItemChange(index, e.target.value)}
-            style={{ flex: 1, marginRight: "0.5rem" }}
+            fullWidth
+            margin="normal"
           />
-          <button type="button" onClick={() => handleRemoveItem(index)}>
-            Remove
-          </button>
+          <Button
+            onClick={() => handleRemoveItem(index)}
+            variant="contained"
+            color="error"
+          >
+            Remove Item
+          </Button>
         </div>
       ))}
 
-      {/* Add item button */}
-      <button
-        type="button"
+      <Button
         onClick={handleAddItem}
+        variant="contained"
+        color="primary"
         style={{ marginBottom: "1rem" }}
       >
         + Add List Item
-      </button>
+      </Button>
 
-      {/* Styles field */}
-      <label>
-        <p>Styles:</p>
-        <textarea
-          value={styles}
-          onChange={(e) => setStyles(e.target.value)}
-          style={{ width: "100%" }}
-        />
-      </label>
+      <TextField
+        label="Styles"
+        variant="outlined"
+        value={styles}
+        onChange={(e) => setStyles(e.target.value)}
+        fullWidth
+        multiline
+        rows={4}
+        margin="normal"
+      />
 
-      {/* Delete Button */}
       <DeleteElementButton
         elementId={elementId}
         gridState={gridState}
