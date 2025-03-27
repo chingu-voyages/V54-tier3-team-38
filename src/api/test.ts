@@ -1,4 +1,5 @@
 import { api } from "./client";
+import { JSONGridState } from "../types/canvasTypes";
 
 // Test backend connection
 export const testConnection = async () => {
