@@ -24,6 +24,7 @@ export function handleDragStart(
 
   const elementsUnderCursor = document.elementsFromPoint(e.clientX, e.clientY);
   const secondEl = elementsUnderCursor[1] as HTMLElement;
+  console.log(secondEl);
   const { row: dragRow, column: dragCol } = secondEl?.dataset?.key
     ? getCoordinates(Number(secondEl.dataset.key))
     : { row: -1, column: -1 };
@@ -47,19 +48,37 @@ export function handleResizeDrag(
   setDraggedElement: React.Dispatch<React.SetStateAction<DraggedElement | null>>
 ) {
   e.stopPropagation();
-  const target = e.target as HTMLDivElement;
-  const direction = target.dataset.resizer as
-    | "left"
-    | "right"
-    | "top"
-    | "bottom";
-
-  setDraggedElement((prev) =>
-    prev ? { ...prev, resizing: direction } : null
-  );
+  const resizerTarget = e.target as HTMLDivElement;
+  
+  // Get the resize direction from the resizer handle.
+  const direction = resizerTarget.dataset.resizer as "left" | "right" | "top" | "bottom";
+  
+  // Find the closest parent element that has the data-key attribute,
+  // which represents the grid cell for the element being resized.
+  const attachedElement = resizerTarget.closest('[data-key]') as HTMLDivElement;
+  if (!attachedElement) {
+    console.error("No attached element found for resizing.");
+    return;
+  }
+  
+  // Extract information from the attached element.
+  const cellNumber = Number(attachedElement.dataset.key);
+  const width = Number(attachedElement.dataset.defaultwidth) || 1;
+  const height = Number(attachedElement.dataset.defaultheight) || 1;
+  const { row, column } = getCoordinates(cellNumber);
+  
+  // Create the new dragged element with the proper attached element data.
+  setDraggedElement({
+    id: attachedElement.dataset.id || "",
+    row,
+    column,
+    width,
+    height,
+    rowOffset: 0,
+    columnOffset: 0,
+    resizing: direction,
+  });
 }
-
-
 
 
 export function isIntersectingOtherElement(
@@ -67,48 +86,85 @@ export function isIntersectingOtherElement(
   draggedElement: DraggedElement | null,
   jsonGridState: JSONGridState
 ): boolean {
+  console.log("Target cell:", targetCell, "Dragged element:", draggedElement);
   if (!draggedElement) return false;
 
-  let offsetX = 0;
-  let offsetY = 0;
-  if (draggedElement.row !== -1) {
-    offsetX = draggedElement.columnOffset;
-    offsetY = draggedElement.rowOffset;
-  }
-
+  // Get drop coordinates from the target cell's data-key.
   const { row: dropRow, column: dropColumn } = getCoordinates(
     Number(targetCell.dataset.key)
   );
 
-  for (
-    let i = dropRow - offsetY;
-    i < dropRow - offsetY + draggedElement.height;
-    i++
-  ) {
-    for (
-      let j = dropColumn - offsetX;
-      j < dropColumn - offsetX + draggedElement.width;
-      j++
-    ) {
+  // Assume the current element's identifier is in its original top-left cell.
+  const currentElementId =
+    jsonGridState.layout[draggedElement.row]?.[draggedElement.column];
+
+  // Define the bounds of the area to check.
+  let startRow: number, endRow: number, startCol: number, endCol: number;
+
+  if (!draggedElement.resizing) {
+    // Regular drop: adjust by the stored offsets.
+    startRow = dropRow - draggedElement.rowOffset;
+    startCol = dropColumn - draggedElement.columnOffset;
+    endRow = startRow + draggedElement.height - 1;
+    endCol = startCol + draggedElement.width - 1;
+  } else {
+    // Resizing drop: determine bounds based on the resize direction.
+    switch (draggedElement.resizing) {
+      case "bottom":
+        // New bottom boundary is dropRow; top remains unchanged.
+        startRow = draggedElement.row;
+        endRow = dropRow;
+        startCol = draggedElement.column;
+        endCol = draggedElement.column + draggedElement.width - 1;
+        break;
+      case "top":
+        // New top boundary is dropRow; bottom remains unchanged.
+        startRow = dropRow;
+        endRow = draggedElement.row + draggedElement.height - 1;
+        startCol = draggedElement.column;
+        endCol = draggedElement.column + draggedElement.width - 1;
+        break;
+      case "left":
+        // New left boundary is dropColumn; right remains unchanged.
+        startCol = dropColumn;
+        endCol = draggedElement.column + draggedElement.width - 1;
+        startRow = draggedElement.row;
+        endRow = draggedElement.row + draggedElement.height - 1;
+        break;
+      case "right":
+        // New right boundary is dropColumn; left remains unchanged.
+        startCol = draggedElement.column;
+        endCol = dropColumn;
+        startRow = draggedElement.row;
+        endRow = draggedElement.row + draggedElement.height - 1;
+        break;
+      default:
+        // Fallback: treat as a regular drop.
+        startRow = dropRow - draggedElement.rowOffset;
+        startCol = dropColumn - draggedElement.columnOffset;
+        endRow = startRow + draggedElement.height - 1;
+        endCol = startCol + draggedElement.width - 1;
+        break;
+    }
+  }
+
+  // Check each cell in the calculated bounds.
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = startCol; j <= endCol; j++) {
       if (
         jsonGridState.layout[i] &&
+        jsonGridState.layout[i][j] &&
         jsonGridState.layout[i][j] !== "" &&
-        (draggedElement.row < 0 ||
-          jsonGridState.layout[draggedElement.row][draggedElement.column] !==
-            jsonGridState.layout[i][j])
+        jsonGridState.layout[i][j] !== currentElementId
       ) {
-        console.log(`Intersection found at ${i},${j}`);
+        console.log(`Intersection found at ${i}, ${j}: ${jsonGridState.layout[i][j]}`);
         return true;
       }
     }
   }
-
   return false;
 }
 
-/**
- * Main drop handler for dragging/resizing
- */
 export function handleDrop(
   e: React.DragEvent<HTMLDivElement>,
   draggedElement: DraggedElement | null,
@@ -126,6 +182,16 @@ export function handleDrop(
   if (!draggedElement) return;
 
   let targetCell = e.target as HTMLDivElement;
+  let cellKey = targetCell.dataset.key;
+  if (!cellKey) {
+    targetCell = targetCell.closest('[data-key]') as HTMLDivElement;
+    cellKey = targetCell?.dataset.key;
+  }
+  
+  if (!cellKey) {
+    console.error("Drop target does not have a valid data-key");
+    return;
+  }
   if (isIntersectingOtherElement(targetCell, draggedElement, jsonGridState)) {
     console.warn("Drop intersects with another element, ignoring drop.");
     return;
