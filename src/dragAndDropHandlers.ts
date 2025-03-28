@@ -2,9 +2,8 @@ import React from "react";
 import { getCoordinates } from "./utils";
 import {
   DraggedElement,
-  JSONGridState,
-  Cell,
   gridSize,
+  JSONGridState,
 } from "./types/canvasTypes";
 
 export function allowDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -24,7 +23,6 @@ export function handleDragStart(
 
   const elementsUnderCursor = document.elementsFromPoint(e.clientX, e.clientY);
   const secondEl = elementsUnderCursor[1] as HTMLElement;
-  console.log(secondEl);
   const { row: dragRow, column: dragCol } = secondEl?.dataset?.key
     ? getCoordinates(Number(secondEl.dataset.key))
     : { row: -1, column: -1 };
@@ -80,13 +78,12 @@ export function handleResizeDrag(
   });
 }
 
-
 export function isIntersectingOtherElement(
   targetCell: HTMLDivElement,
   draggedElement: DraggedElement | null,
   jsonGridState: JSONGridState
 ): boolean {
-  console.log("Target cell:", targetCell, "Dragged element:", draggedElement);
+  
   if (!draggedElement) return false;
 
   // Get drop coordinates from the target cell's data-key.
@@ -196,7 +193,7 @@ export function handleDrop(
     console.warn("Drop intersects with another element, ignoring drop.");
     return;
   }
-
+  
   // If the targetCell is actually the element’s child or resizer,
   // use elementsFromPoint to get the correct cell.
   if (targetCell.dataset.width || targetCell.dataset.defaultwidth) {
@@ -282,6 +279,13 @@ export function handleDrop(
   const offsetX = draggedElement.columnOffset;
   const finalRow = offsetY ? newRow - offsetY : newRow;
   const finalCol = offsetX ? newCol - offsetX : newCol;
+
+  if(draggedElement.row!=-1){
+    if(finalCol+draggedElement.width>gridSize||finalRow+draggedElement.height>gridSize||finalCol<0||finalRow<0){
+      console.log("grid bounds exceeded, drop ignored")
+      return
+    }
+  }
 
   updateGridState(
     draggedElement,
