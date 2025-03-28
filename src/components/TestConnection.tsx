@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { testConnection } from "../api/test";
+import { testConnection } from "../api/backendService";
 
 const TestConnection = () => {
   useEffect(() => {

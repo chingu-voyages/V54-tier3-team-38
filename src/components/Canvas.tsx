@@ -23,7 +23,7 @@ import {
   handleResizeDrag,
   handleDrop,
 } from "../dragAndDropHandlers";
-import { postGrid } from "../api/backendService";
+import { postGrid } from "@/api/backendService";
 
 interface ActiveEditor {
   id: string; // unique id for this element instance

@@ -2,7 +2,7 @@ import { api } from "./client";
 import { Asset } from "@/types/asset";
 
 // Create a new asset
-export const createAsset = async (assetData: Partial<Asset>): Promise<Asset> => {
+export const createAsset = async (assetData: FormData): Promise<Asset> => {
   const response = await api.post<Asset>("/assets/", assetData);
   return response.data;
 };
