@@ -2,7 +2,7 @@ import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField } from "@mui/material";
 
-const H2InputForm: React.FC<EditorProps> = ({
+const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
   jsonGridState,
   setJsonGridState,
@@ -36,7 +36,7 @@ const H2InputForm: React.FC<EditorProps> = ({
         padding: "1rem",
       }}
     >
-      <h3>&lt;h2&gt; Editor: {elementId}</h3>
+      <h3>&lt;Button&gt; Editor: {elementId}</h3>
 
       <TextField
         label="Content"
@@ -72,4 +72,4 @@ const H2InputForm: React.FC<EditorProps> = ({
   );
 };
 
-export default H2InputForm;
+export default ButtonInputForm;
