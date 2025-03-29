@@ -99,14 +99,6 @@ export const Canvas: React.FC = () => {
     height: number
   ) {
     setGridState((prevGrid) => {
-      // if (draggedElem.row == newRow && draggedElem.column == newCol) {
-      //   console.log("dropped in the same spot");
-      // } else {
-      //   console.log("new spot, clearing old positions");
-      //   console.log(
-      //     `oldspot: ${draggedElem.row},${draggedElem.column} new spot: ${newRow},${newCol}`
-      //   );
-      // }
       const newGrid = prevGrid.map((row) => [...row]);
       if (draggedElem.row >= 0 && draggedElem.column >= 0) {
         clearOldPositions(newGrid, draggedElem);
