@@ -1,8 +1,9 @@
 import { ComponentType, Dispatch, SetStateAction } from "react";
-import H2InputForm from "../components/H2InputForm"; // adjust path as needed
+import HeaderInputForm from "../components/HeaderInputForm";
 import FooterInputForm from "../components/FooterInputForm";
 import NavInputForm from "../components/NavInputForm";
 import UlInputForm from "../components/UlInputForm";
+import ButtonInputForm from "../components/ButtonInputForm";
 
 // Basic Cell interface
 export interface Cell {
@@ -70,12 +71,47 @@ export interface DefaultElementProps {
 }
 
 export const defaultElementProps: DefaultElementProps = {
-  h2: {
-    content: "Welcome to My Page",
-    styles: "background: black; color: white; text-align: center;",
+  h1: {
+    content: "My Page",
+    styles: "background: black; color: white; text-align: center; font-size: 1.6rem;",
     defaultWidth: 3,
     defaultHeight: 2,
-    editor: H2InputForm,
+    editor: HeaderInputForm,
+  },
+  h2: {
+    content: "Welcome to My Page",
+    styles: "background: black; color: white; text-align: center; font-size: 1.4rem;",
+    defaultWidth: 3,
+    defaultHeight: 2,
+    editor: HeaderInputForm,
+  },
+  h3: {
+    content: "So glad you could visit",
+    styles: "background: black; color: white; text-align: center; font-size: 1.2rem;",
+    defaultWidth: 3,
+    defaultHeight: 2,
+    editor: HeaderInputForm,
+  },
+  h4: {
+    content: "This is an h4 tag",
+    styles: "background: black; color: white; text-align: center; font-size: 1rem;",
+    defaultWidth: 3,
+    defaultHeight: 1,
+    editor: HeaderInputForm,
+  },
+  h5: {
+    content: "This is an h5 tag",
+    styles: "background: black; color: gray; text-align: center; font-size: 1rem;",
+    defaultWidth: 3,
+    defaultHeight: 1,
+    editor: HeaderInputForm,
+  },
+  h6: {
+    content: "This is an h6 tag",
+    styles: "background: black; color: dimgray; text-align: center; font-size: 1rem;",
+    defaultWidth: 3,
+    defaultHeight: 1,
+    editor: HeaderInputForm,
   },
   footer: {
     content: "© 2025 Your Company",
@@ -99,4 +135,13 @@ export const defaultElementProps: DefaultElementProps = {
     defaultHeight: 2,
     editor: UlInputForm,
   },
+  /* commenting out until refactored
+  button: {
+    content: "<button>Click Me</button>",
+    styles: "background: blue; color: white",
+    defaultWidth: 2,
+    defaultHeight: 2,
+    editor: ButtonInputForm
+  }
+  */
 };
