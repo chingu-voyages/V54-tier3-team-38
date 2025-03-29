@@ -79,7 +79,7 @@ export const defaultElementProps: DefaultElementProps = {
   },
   footer: {
     content: "© 2025 Your Company",
-    styles: "background: #222; color: #ccc; padding: 1rem; text-align: center;",
+    styles: "background: #222; color: #ccc; text-align: center;",
     defaultWidth: 6,
     defaultHeight: 2,
     editor: FooterInputForm,
@@ -87,15 +87,14 @@ export const defaultElementProps: DefaultElementProps = {
   nav: {
     content:
       "<a href='#'>Home</a> | <a href='#'>About</a> | <a href='#'>Contact</a>",
-    styles:
-      "background: #333; color: white; padding: 0.5rem; text-align: center;",
+    styles: "background: #333; color: white; text-align: center;",
     defaultWidth: 6,
     defaultHeight: 2,
     editor: NavInputForm,
   },
   ul: {
     content: "<li>Item 1</li><li>Item 2</li><li>Item 3</li>",
-    styles: "list-style-type: disc; padding-left: 2rem;",
+    styles: "list-style-type: disc;",
     defaultWidth: 2,
     defaultHeight: 2,
     editor: UlInputForm,

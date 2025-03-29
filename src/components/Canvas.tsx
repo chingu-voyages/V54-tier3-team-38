@@ -31,6 +31,7 @@ interface ActiveEditor {
 }
 
 export const Canvas: React.FC = () => {
+  const GAP = 2;
   const [gridState, setGridState] = useState<(Cell | null)[][]>(
     Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
   );
@@ -262,7 +263,7 @@ export const Canvas: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     position: "relative",
-                    backgroundColor: cell ? "lightblue" : "white",
+                    backgroundColor: "white",
                   }}
                 >
                   {cell &&
@@ -304,8 +305,8 @@ export const Canvas: React.FC = () => {
                           data-defaultwidth={cell.width}
                           data-defaultheight={cell.height}
                           style={{
-                            width: cell.width * CELL_SIZE,
-                            height: cell.height * CELL_SIZE,
+                            width: cell.width * (CELL_SIZE + GAP),
+                            height: cell.height * (CELL_SIZE + GAP),
                             ...parsedStyles,
                             display: "flex",
                             alignItems: "center",
