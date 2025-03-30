@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { IconButton, Snackbar, TextField } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import Button from "./Button";
+import parse from "html-react-parser";
 import {
   Cell,
   JSONGridState,
@@ -239,7 +240,8 @@ export const Canvas: React.FC = () => {
             {gridState.flat().map((cell, i) => {
               const row = Math.floor(i / gridSize);
               const column = i % gridSize;
-
+              const wrapperElement = cell?.id as React.ElementType;
+              const Wrapper: React.ElementType = wrapperElement || "div";
               return (
                 <div
                   key={i}
@@ -281,13 +283,13 @@ export const Canvas: React.FC = () => {
                       const parsedStyles = parseStyleString(defaultStyleString);
 
                       return (
-                        <div
+                        <Wrapper
                           draggable={true}
-                          onDragStart={(e) =>
+                          onDragStart={(e: React.DragEvent<HTMLDivElement>) =>
                             handleDragStart(e, setDraggedElement)
                           }
                           onDragOver={allowDrop}
-                          onDrop={(e) =>
+                          onDrop={(e: React.DragEvent<HTMLDivElement>) =>
                             handleDrop(
                               e,
                               draggedElement,
@@ -318,11 +320,7 @@ export const Canvas: React.FC = () => {
                             zIndex: 10,
                           }}
                         >
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: defaultContent,
-                            }}
-                          />
+                          {parse(defaultContent)}
                           {["left", "right", "top", "bottom"].map((dir) => {
                             const isHorizontal =
                               dir === "left" || dir === "right";
@@ -365,7 +363,7 @@ export const Canvas: React.FC = () => {
                               />
                             );
                           })}
-                        </div>
+                        </Wrapper>
                       );
                     })()}
                 </div>
