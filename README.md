@@ -4,7 +4,7 @@ Welcome to DnDnDB, a web app for building static pages with a drag and drop inte
 
 # Installation
 
-Run the following commands to set up the installation and run the dev server
+Rename the env file and update the env variables accordingly. Run the following commands to set up the installation and run the dev server
 
 ```javascript
 cd dndndb
