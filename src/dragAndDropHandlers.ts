@@ -14,6 +14,7 @@ export function handleDragStart(
   e: React.DragEvent<HTMLDivElement>,
   setDraggedElement: React.Dispatch<React.SetStateAction<DraggedElement | null>>
 ) {
+  // e.preventDefault(); 
   const target = e.target as HTMLDivElement;
   const cellNumber = Number(target.dataset.key);
   const width = Number(target.dataset.defaultwidth) || 1;
