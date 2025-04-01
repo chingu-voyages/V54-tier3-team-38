@@ -1,5 +1,16 @@
-import { api } from "./backendService";
-import { Asset  } from "../types/asset";
+import { api } from "./client";
+import { Asset } from "@/types/asset";
+
+// Create a new asset
+export const createAsset = async (assetData: FormData): Promise<Asset> => {
+  const response = await api.post<Asset>("/assets/", assetData);
+  return response.data;
+};
+
+// Optionally: Update / Delete functions...
+export const deleteAsset = async (assetId: number): Promise<void> => {
+  await api.delete(`/assets/${assetId}`);
+};
 
 export const fetchAssets = async (): Promise<Asset | null> => {
   try {

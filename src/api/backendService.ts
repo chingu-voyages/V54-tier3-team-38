@@ -1,15 +1,5 @@
-import { JSONGridState } from "@/types/canvasTypes";
-import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_BASE_URL; // if local will use .env, if production will use .env.development
-
-export const api = axios.create({  // ✅ Export api as a named export
-  baseURL: API_BASE_URL,
-  timeout: 5000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+import { api } from "./client";
+import { JSONGridState } from "../types/canvasTypes";
 
 // Test backend connection
 export const testConnection = async () => {
