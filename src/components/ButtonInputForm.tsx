@@ -1,6 +1,9 @@
-import { EditorProps } from "../types/canvasTypes";
+import { EditorProps, DefineStyles } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField } from "@mui/material";
+import StyleEditor from "./StyleEditor";
+import { parseStyleString, styleObjectToCssString } from "../utils";
+import ResetStylesButton from "./ResetStylesButton";
 
 const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
@@ -9,21 +12,31 @@ const ButtonInputForm: React.FC<EditorProps> = ({
   gridState,
   setGridState,
   setActiveEditor,
+  defaultElementProps,
+  saveAllStateToLocalStorage,
+  draggedElement,
+  instanceCounters,
 }) => {
   const content = jsonGridState.content[elementId] || "";
-  const styles = jsonGridState.styles[elementId] || "";
 
-  // Update content/styles in JSON grid state
-  const handleChange = (field: "content" | "styles", value: string) => {
+  const elementType = elementId.split(".")[0];
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
+
+  const parsedStyle = parseStyleString(
+    jsonGridState.styles[elementId] || fallbackStyle
+  ) as DefineStyles;
+
+  const updateStyle = (key: keyof DefineStyles, value: string) => {
+    const updatedStyle = {
+      ...parsedStyle,
+      [key]: value,
+    };
+
     setJsonGridState((prev) => ({
       ...prev,
-      content: {
-        ...prev.content,
-        [elementId]: field === "content" ? value : prev.content[elementId],
-      },
       styles: {
         ...prev.styles,
-        [elementId]: field === "styles" ? value : prev.styles[elementId],
+        [elementId]: styleObjectToCssString(updatedStyle),
       },
     }));
   };
@@ -42,23 +55,22 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         label="Content"
         variant="outlined"
         value={content}
-        onChange={(e) => handleChange("content", e.target.value)}
+        onChange={(e) =>
+          setJsonGridState((prev) => ({
+            ...prev,
+            content: {
+              ...prev.content,
+              [elementId]: e.target.value,
+            },
+          }))
+        }
         fullWidth
         multiline
         rows={2}
         margin="normal"
       />
 
-      <TextField
-        label="Styles"
-        variant="outlined"
-        value={styles}
-        onChange={(e) => handleChange("styles", e.target.value)}
-        fullWidth
-        multiline
-        rows={4}
-        margin="normal"
-      />
+      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}
@@ -67,6 +79,16 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
+      />
+
+      <ResetStylesButton
+        elementId={elementId}
+        jsonGridState={jsonGridState}
+        setJsonGridState={setJsonGridState}
+        defaultElementProps={defaultElementProps}
       />
     </div>
   );

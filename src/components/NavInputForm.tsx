@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
-import { EditorProps } from "../types/canvasTypes";
+import { EditorProps, DefineStyles } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
+import ResetStylesButton from "./ResetStylesButton";
+import StyleEditor from "./StyleEditor";
 import { TextField, Button } from "@mui/material";
+import { parseStyleString, styleObjectToCssString } from "../utils";
 
 function parseNavLinks(html: string): Array<{ url: string; text: string }> {
   const anchorRegex = /<a\s+href=["'](.*?)["']>(.*?)<\/a>/gi;
@@ -30,47 +32,85 @@ const NavInputForm: React.FC<EditorProps> = ({
   setGridState,
   gridState,
   setActiveEditor,
+  saveAllStateToLocalStorage,
+  draggedElement,
+  instanceCounters,
+  defaultElementProps,
 }) => {
-  const originalHtml = jsonGridState.content[elementId] || "";
-  const [links, setLinks] = useState(() => parseNavLinks(originalHtml));
-  const [styles, setStyles] = useState(
-    () => jsonGridState.styles[elementId] || ""
-  );
+  const elementType = elementId.split(".")[0];
+  const fallbackContent = defaultElementProps[elementType]?.content ?? "";
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
 
-  // Update JSON grid state whenever links or styles change
-  useEffect(() => {
-    const newHtml = buildNavContent(links);
-    setJsonGridState((prev) => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        [elementId]: newHtml,
-      },
-      styles: {
-        ...prev.styles,
-        [elementId]: styles,
-      },
-    }));
-  }, [links, styles, elementId, setJsonGridState]);
+  const content = jsonGridState.content[elementId] || fallbackContent;
+  const links = parseNavLinks(content);
+
+  const parsed = parseStyleString(
+    jsonGridState.styles[elementId] || fallbackStyle
+  ) as Partial<DefineStyles>;
+
+  const parsedStyle: DefineStyles = {
+    backgroundColor: parsed.backgroundColor || "#333",
+    color: parsed.color || "#ffffff",
+    textAlign: parsed.textAlign || "center",
+  };
 
   const handleLinkChange = (
     index: number,
     field: "url" | "text",
     value: string
   ) => {
-    setLinks((prev) => {
-      const clone = [...prev];
-      clone[index] = { ...clone[index], [field]: value };
-      return clone;
-    });
+    const updatedLinks = [...links];
+    updatedLinks[index] = { ...updatedLinks[index], [field]: value };
+    const newHtml = buildNavContent(updatedLinks);
+
+    setJsonGridState((prev) => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        [elementId]: newHtml,
+      },
+    }));
   };
 
   const handleAddLink = () => {
-    setLinks((prev) => [...prev, { url: "#", text: "New Link" }]);
+    const updatedLinks = [...links, { url: "#", text: "New Link" }];
+    const newHtml = buildNavContent(updatedLinks);
+
+    setJsonGridState((prev) => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        [elementId]: newHtml,
+      },
+    }));
   };
 
   const handleRemoveLink = (index: number) => {
-    setLinks((prev) => prev.filter((_, i) => i !== index));
+    const updatedLinks = links.filter((_, i) => i !== index);
+    const newHtml = buildNavContent(updatedLinks);
+
+    setJsonGridState((prev) => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        [elementId]: newHtml,
+      },
+    }));
+  };
+
+  const updateStyle = (key: keyof DefineStyles, value: string) => {
+    const newStyle: DefineStyles = {
+      ...parsedStyle,
+      [key]: value,
+    };
+
+    setJsonGridState((prev) => ({
+      ...prev,
+      styles: {
+        ...prev.styles,
+        [elementId]: styleObjectToCssString(newStyle),
+      },
+    }));
   };
 
   return (
@@ -130,16 +170,7 @@ const NavInputForm: React.FC<EditorProps> = ({
         + Add Link
       </Button>
 
-      <TextField
-        label="Styles"
-        variant="outlined"
-        value={styles}
-        onChange={(e) => setStyles(e.target.value)}
-        fullWidth
-        multiline
-        rows={4}
-        margin="normal"
-      />
+      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}
@@ -148,6 +179,16 @@ const NavInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
+      />
+
+      <ResetStylesButton
+        elementId={elementId}
+        jsonGridState={jsonGridState}
+        setJsonGridState={setJsonGridState}
+        defaultElementProps={defaultElementProps}
       />
     </div>
   );
