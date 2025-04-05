@@ -36,6 +36,11 @@ export interface JSONGridState {
   content: { [key: string]: string };
   styles: { [key: string]: string };
 }
+export interface DefineStyles {
+  backgroundColor: string;
+  color: string;
+  textAlign: string;
+}
 
 // For dragging an element around
 export interface DraggedElement {

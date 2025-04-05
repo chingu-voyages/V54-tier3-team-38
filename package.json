@@ -19,6 +19,7 @@
     "eslint-plugin-react-x": "^1.36.1",
     "html-react-parser": "^5.2.2",
     "react": "^19.0.0",
+    "react-color": "^2.19.3",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "prettier": "^3.5.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

@@ -1,6 +1,13 @@
+import React from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField } from "@mui/material";
+import StyleEditor from "./StyleEditor";
+import { parseStyleString } from "../utils";
+import { DefineStyles } from "../types/canvasTypes";
+import { styleObjectToCssString } from "../utils";
+
+// Helper to convert a style object to a CSS string.
 
 const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
@@ -11,19 +18,38 @@ const ButtonInputForm: React.FC<EditorProps> = ({
   setActiveEditor,
 }) => {
   const content = jsonGridState.content[elementId] || "";
-  const styles = jsonGridState.styles[elementId] || "";
 
-  // Update content/styles in JSON grid state
-  const handleChange = (field: "content" | "styles", value: string) => {
+  const defaultStyle: DefineStyles = {
+    backgroundColor: "#ffffff",
+    color: "#000000",
+    textAlign: "left",
+  };
+
+  let parsedStyle: DefineStyles = defaultStyle;
+  try {
+    const rawStyle = jsonGridState.styles[elementId];
+    if (rawStyle) {
+      const parsed = parseStyleString(rawStyle) as Partial<DefineStyles>;
+      parsedStyle = {
+        backgroundColor: parsed.backgroundColor || defaultStyle.backgroundColor,
+        color: parsed.color || defaultStyle.color,
+        textAlign: parsed.textAlign || defaultStyle.textAlign,
+      };
+    }
+  } catch (err) {
+    console.warn("Invalid style string:", jsonGridState.styles[elementId]);
+  }
+
+  const updateStyle = (key: keyof DefineStyles, value: string) => {
+    const newStyle: DefineStyles = {
+      ...parsedStyle,
+      [key]: value,
+    };
     setJsonGridState((prev) => ({
       ...prev,
-      content: {
-        ...prev.content,
-        [elementId]: field === "content" ? value : prev.content[elementId],
-      },
       styles: {
         ...prev.styles,
-        [elementId]: field === "styles" ? value : prev.styles[elementId],
+        [elementId]: styleObjectToCssString(newStyle),
       },
     }));
   };
@@ -42,23 +68,23 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         label="Content"
         variant="outlined"
         value={content}
-        onChange={(e) => handleChange("content", e.target.value)}
+        onChange={(e) =>
+          setJsonGridState((prev) => ({
+            ...prev,
+            content: {
+              ...prev.content,
+              [elementId]: e.target.value,
+            },
+          }))
+        }
         fullWidth
         multiline
         rows={2}
         margin="normal"
       />
 
-      <TextField
-        label="Styles"
-        variant="outlined"
-        value={styles}
-        onChange={(e) => handleChange("styles", e.target.value)}
-        fullWidth
-        multiline
-        rows={4}
-        margin="normal"
-      />
+      {/* Using the extracted StyleEditor component */}
+      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}
