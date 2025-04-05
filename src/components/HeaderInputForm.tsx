@@ -19,26 +19,26 @@ const HeaderInputForm: React.FC<EditorProps> = ({
   instanceCounters,
   defaultElementProps,
 }) => {
-  const content = jsonGridState.content[elementId] || "";
-
   const elementType = elementId.split(".")[0];
-  const fallback = defaultElementProps[elementType]?.styles ?? "";
-  const currentStyle = jsonGridState.styles[elementId] || fallback;
-
-  // Remove base styles temporarily so we only edit visual props
+  const fallbackContent = defaultElementProps[elementType]?.content ?? "";
+  const content = jsonGridState.content[elementId] || fallbackContent;
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
+  const currentStyle = jsonGridState.styles[elementId] || fallbackStyle;
   const strippedStyle = currentStyle.replace(BASE_STYLES, "").trim();
-
   const parsedStyle = parseStyleString(strippedStyle) as DefineStyles;
+  const defaultParsedStyle: DefineStyles = {
+    backgroundColor: parsedStyle.backgroundColor || "#ffffff",
+    color: parsedStyle.color || "#000000",
+    textAlign: parsedStyle.textAlign || "center",
+  };
 
   const updateStyle = (key: keyof DefineStyles, value: string) => {
-    const updatedStyle = {
-      ...parsedStyle,
+    const updatedStyle: DefineStyles = {
+      ...defaultParsedStyle,
       [key]: value,
     };
-
     const fullStyle =
       `${styleObjectToCssString(updatedStyle)} ${BASE_STYLES}`.trim();
-
     setJsonGridState((prev) => ({
       ...prev,
       styles: {
@@ -77,7 +77,7 @@ const HeaderInputForm: React.FC<EditorProps> = ({
         margin="normal"
       />
 
-      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
+      <StyleEditor style={defaultParsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}

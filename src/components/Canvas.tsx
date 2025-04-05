@@ -143,11 +143,26 @@ export const Canvas: React.FC = () => {
         }
       }
 
+      // Create new copies for content and styles.
+      const newContent = { ...jsonGridState.content };
+      const newStyles = { ...jsonGridState.styles };
+      // Extract base type (e.g. "button" from "button.1")
+      const baseType = uniqueId.split(".")[0];
+
+      // If the new element's content isn't set, assign default content.
+      if (!newContent[uniqueId]) {
+        newContent[uniqueId] = defaultElementProps[baseType]?.content || "";
+      }
+      // If the new element's styles aren't set, assign default styles.
+      if (!newStyles[uniqueId]) {
+        newStyles[uniqueId] = defaultElementProps[baseType]?.styles || "";
+      }
+
       const newJson = generateJsonGrid(
         newGrid,
         defaultElementProps,
-        jsonGridState.content,
-        jsonGridState.styles
+        newContent,
+        newStyles
       );
       setJsonGridState(newJson);
       saveAllStateToLocalStorage(
