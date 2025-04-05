@@ -5,7 +5,6 @@ import NavInputForm from "../components/NavInputForm";
 import UlInputForm from "../components/UlInputForm";
 import ButtonInputForm from "../components/ButtonInputForm";
 
-// Basic Cell interface
 export interface Cell {
   id: string;
   width: number;
@@ -15,7 +14,6 @@ export interface Cell {
   main: boolean;
 }
 
-// The grid layout resolution
 export interface Resolution {
   width: number;
   height: number;
@@ -27,6 +25,7 @@ export interface EditorProps {
   gridState: (Cell | null)[][];
   setGridState: Dispatch<SetStateAction<(Cell | null)[][]>>;
   setActiveEditor: Dispatch<SetStateAction<ActiveEditor | null>>;
+  defaultElementProps: DefaultElementProps;
 }
 
 // The entire grid's JSON representation
@@ -148,7 +147,7 @@ export const defaultElementProps: DefaultElementProps = {
   },
   button: {
     content: "Click Me",
-    styles: "background: blue; color: white",
+    styles: "background: blue; color: white;",
     defaultWidth: 2,
     defaultHeight: 2,
     editor: ButtonInputForm,

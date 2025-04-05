@@ -7,8 +7,6 @@ import { parseStyleString } from "../utils";
 import { DefineStyles } from "../types/canvasTypes";
 import { styleObjectToCssString } from "../utils";
 
-// Helper to convert a style object to a CSS string.
-
 const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
   jsonGridState,
@@ -16,29 +14,21 @@ const ButtonInputForm: React.FC<EditorProps> = ({
   gridState,
   setGridState,
   setActiveEditor,
+  defaultElementProps,
 }) => {
   const content = jsonGridState.content[elementId] || "";
 
-  const defaultStyle: DefineStyles = {
-    backgroundColor: "#ffffff",
-    color: "#000000",
-    textAlign: "left",
-  };
+  const elementType = elementId.split(".")[0];
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
 
-  let parsedStyle: DefineStyles = defaultStyle;
-  try {
-    const rawStyle = jsonGridState.styles[elementId];
-    if (rawStyle) {
-      const parsed = parseStyleString(rawStyle) as Partial<DefineStyles>;
-      parsedStyle = {
-        backgroundColor: parsed.backgroundColor || defaultStyle.backgroundColor,
-        color: parsed.color || defaultStyle.color,
-        textAlign: parsed.textAlign || defaultStyle.textAlign,
-      };
-    }
-  } catch (err) {
-    console.warn("Invalid style string:", jsonGridState.styles[elementId]);
-  }
+  const parsed = parseStyleString(
+    jsonGridState.styles[elementId] || fallbackStyle
+  ) as Partial<DefineStyles>;
+  const parsedStyle: DefineStyles = {
+    backgroundColor: parsed.backgroundColor || "#ffffff",
+    color: parsed.color || "#000000",
+    textAlign: parsed.textAlign || "left",
+  };
 
   const updateStyle = (key: keyof DefineStyles, value: string) => {
     const newStyle: DefineStyles = {
@@ -83,7 +73,6 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         margin="normal"
       />
 
-      {/* Using the extracted StyleEditor component */}
       <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton

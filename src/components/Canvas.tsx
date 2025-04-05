@@ -4,6 +4,8 @@ import { IconButton, Snackbar, TextField } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import Button from "./Button";
 import parse from "html-react-parser";
+let instanceCounters: Record<string, number> = {};
+
 import {
   Cell,
   JSONGridState,
@@ -68,6 +70,9 @@ export const Canvas: React.FC = () => {
         if (parsed.draggedElement) {
           setDraggedElement(parsed.draggedElement);
         }
+        if (parsed.instanceCounters) {
+          instanceCounters = { ...parsed.instanceCounters };
+        }
       } catch (error) {
         console.error("Error parsing saved localStorage data:", error);
       }
@@ -77,12 +82,14 @@ export const Canvas: React.FC = () => {
   const saveAllStateToLocalStorage = (
     updatedGridState: (Cell | null)[][],
     updatedJsonGridState: JSONGridState,
-    updatedDraggedElement: DraggedElement | null
+    updatedDraggedElement: DraggedElement | null,
+    updatedInstanceCounters: Object
   ) => {
     const dataToStore = {
       gridState: updatedGridState,
       jsonGridState: updatedJsonGridState,
       draggedElement: updatedDraggedElement,
+      instanceCounters: updatedInstanceCounters,
     };
     try {
       localStorage.setItem("gridEditorState", JSON.stringify(dataToStore));
@@ -103,9 +110,16 @@ export const Canvas: React.FC = () => {
       if (draggedElem.row >= 0 && draggedElem.column >= 0) {
         clearOldPositions(newGrid, draggedElem);
       }
+
       let uniqueId = draggedElem.id;
       if (!uniqueId.includes(".")) {
-        uniqueId = `${draggedElem.id}.${Date.now()}`;
+        const type = uniqueId;
+        if (!(type in instanceCounters)) {
+          instanceCounters[type] = 1;
+        } else {
+          instanceCounters[type] += 1;
+        }
+        uniqueId = `${type}.${instanceCounters[type]}`;
         draggedElem = { ...draggedElem, id: uniqueId };
       }
 
@@ -133,7 +147,12 @@ export const Canvas: React.FC = () => {
         jsonGridState.styles
       );
       setJsonGridState(newJson);
-      saveAllStateToLocalStorage(newGrid, newJson, draggedElem);
+      saveAllStateToLocalStorage(
+        newGrid,
+        newJson,
+        draggedElem,
+        instanceCounters
+      );
       return newGrid;
     });
   }
@@ -444,6 +463,7 @@ export const Canvas: React.FC = () => {
                     setActiveEditor={setActiveEditor}
                     gridState={gridState}
                     setGridState={setGridState}
+                    defaultElementProps={defaultElementProps}
                   />
                 );
               }

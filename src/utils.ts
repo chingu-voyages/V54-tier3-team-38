@@ -31,7 +31,6 @@ export function generateJsonGrid(
   const elementIndices: { [key: string]: number } = {};
   const assignedIndices: { [key: string]: number } = {};
   const layout: string[][] = [];
-  // Start with any existing content/styles.
   const content: { [key: string]: string } = { ...existingContent };
   const styles: { [key: string]: string } = { ...existingStyles };
 
@@ -89,18 +88,14 @@ export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
   const layout = json.layout;
   const rows = layout.length;
   const cols = layout[0]?.length || 0;
-
-  // Initialize the grid with null values.
   const grid: (Cell | null)[][] = Array.from({ length: rows }, () =>
     Array(cols).fill(null)
   );
 
-  // Track which cells have been processed.
   const visited: boolean[][] = Array.from({ length: rows }, () =>
     Array(cols).fill(false)
   );
 
-  // Loop over each cell in the layout.
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
       if (visited[i][j]) continue;
@@ -111,12 +106,10 @@ export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
       }
 
       const [elementId] = cellValue.split(".");
-      // Determine width
       let width = 1;
       while (j + width < cols && layout[i][j + width] === cellValue) {
         width++;
       }
-      // Determine height
       let height = 1;
       outer: while (i + height < rows) {
         for (let k = 0; k < width; k++) {
