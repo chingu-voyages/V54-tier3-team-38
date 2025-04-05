@@ -44,7 +44,6 @@ export interface DefineStyles {
   textAlign: string;
 }
 
-// For dragging an element around
 export interface DraggedElement {
   id: string;
   row: number;

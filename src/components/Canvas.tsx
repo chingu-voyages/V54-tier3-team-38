@@ -5,8 +5,6 @@ import { Close } from "@mui/icons-material";
 import Button from "./Button";
 import parse from "html-react-parser";
 
-// let instanceCounters: Record<string, number> = {};
-
 import {
   Cell,
   JSONGridState,
@@ -28,6 +26,7 @@ import {
   handleDrop,
 } from "../dragAndDropHandlers";
 import { postGrid } from "@/api/backendService";
+import PreviewButton from "./PreviewButton";
 
 interface ActiveEditor {
   id: string;
@@ -436,7 +435,7 @@ export const Canvas: React.FC = () => {
             })}
           </div>
         </div>
-
+        <PreviewButton jsonGridState={jsonGridState} />
         <Snackbar
           open={snackbarOpen}
           message={snackbarMessage}
