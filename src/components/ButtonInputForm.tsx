@@ -1,4 +1,3 @@
-import React from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField } from "@mui/material";
@@ -15,6 +14,9 @@ const ButtonInputForm: React.FC<EditorProps> = ({
   setGridState,
   setActiveEditor,
   defaultElementProps,
+  saveAllStateToLocalStorage,
+  draggedElement,
+  instanceCounters,
 }) => {
   const content = jsonGridState.content[elementId] || "";
 
@@ -82,6 +84,9 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
       />
     </div>
   );

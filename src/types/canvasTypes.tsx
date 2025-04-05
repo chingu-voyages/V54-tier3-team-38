@@ -26,6 +26,9 @@ export interface EditorProps {
   setGridState: Dispatch<SetStateAction<(Cell | null)[][]>>;
   setActiveEditor: Dispatch<SetStateAction<ActiveEditor | null>>;
   defaultElementProps: DefaultElementProps;
+  saveAllStateToLocalStorage: Function;
+  instanceCounters: object;
+  draggedElement: object | null;
 }
 
 // The entire grid's JSON representation

@@ -9,6 +9,9 @@ const HeaderInputForm: React.FC<EditorProps> = ({
   gridState,
   setGridState,
   setActiveEditor,
+  draggedElement,
+  saveAllStateToLocalStorage,
+  instanceCounters,
 }) => {
   const content = jsonGridState.content[elementId] || "";
   const styles = jsonGridState.styles[elementId] || "";
@@ -67,6 +70,9 @@ const HeaderInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
       />
     </div>
   );

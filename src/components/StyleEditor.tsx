@@ -1,4 +1,3 @@
-import React from "react";
 import { SketchPicker } from "react-color";
 import { MenuItem, InputLabel, FormControl, Select } from "@mui/material";
 

@@ -9,6 +9,9 @@ const FooterInputForm: React.FC<EditorProps> = ({
   setActiveEditor,
   setGridState,
   gridState,
+  saveAllStateToLocalStorage,
+  draggedElement,
+  instanceCounters,
 }) => {
   const content = jsonGridState.content[elementId] || "";
   const styles = jsonGridState.styles[elementId] || "";
@@ -66,6 +69,9 @@ const FooterInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
       />
     </div>
   );

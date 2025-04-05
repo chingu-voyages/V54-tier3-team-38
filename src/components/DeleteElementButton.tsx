@@ -10,6 +10,9 @@ interface DeleteButtonProps {
   setActiveEditor: React.Dispatch<
     React.SetStateAction<{ id: string; type: string } | null>
   >;
+  saveAllStateToLocalStorage: Function;
+  instanceCounters: object;
+  draggedElement: object | null;
 }
 
 const DeleteElementButton: React.FC<DeleteButtonProps> = ({
@@ -19,43 +22,47 @@ const DeleteElementButton: React.FC<DeleteButtonProps> = ({
   jsonGridState,
   setJsonGridState,
   setActiveEditor,
+  saveAllStateToLocalStorage,
+  instanceCounters,
+  draggedElement,
 }) => {
   const handleDelete = () => {
-    // 1) Remove from gridState
-    setGridState((prevGrid) => {
-      const newGrid = prevGrid.map((row, r) =>
-        row.map((cell, c) => {
-          if (cell && jsonGridState.layout[r][c] === elementId) {
-            return null;
-          }
-          return cell;
-        })
-      );
+    const newGrid = gridState.map((row, r) =>
+      row.map((cell, c) => {
+        if (cell && jsonGridState.layout[r][c] === elementId) {
+          return null;
+        }
+        return cell;
+      })
+    );
 
-      // 2) Remove content/styles + fix layout
-      setJsonGridState((prev) => {
-        const newContent = { ...prev.content };
-        const newStyles = { ...prev.styles };
-        delete newContent[elementId];
-        delete newStyles[elementId];
+    const newContent = { ...jsonGridState.content };
+    const newStyles = { ...jsonGridState.styles };
+    delete newContent[elementId];
+    delete newStyles[elementId];
 
-        const newLayout = prev.layout.map((row) =>
-          row.map((id) => (id === elementId ? "" : id))
-        );
+    const newLayout = jsonGridState.layout.map((row) =>
+      row.map((id) => (id === elementId ? "" : id))
+    );
 
-        return {
-          ...prev,
-          layout: newLayout,
-          content: newContent,
-          styles: newStyles,
-        };
-      });
+    const updatedJsonGridState: JSONGridState = {
+      ...jsonGridState,
+      layout: newLayout,
+      content: newContent,
+      styles: newStyles,
+    };
 
-      // 3) Clear active editor if this is the one being edited
-      setActiveEditor(null);
+    setGridState(newGrid);
+    setJsonGridState(updatedJsonGridState);
+    setActiveEditor(null);
 
-      return newGrid;
-    });
+    // ✅ Use the freshly computed values
+    saveAllStateToLocalStorage(
+      newGrid,
+      updatedJsonGridState,
+      draggedElement,
+      instanceCounters
+    );
   };
 
   return <Button onClick={handleDelete} label="Delete Element" />;

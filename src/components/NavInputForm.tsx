@@ -30,6 +30,9 @@ const NavInputForm: React.FC<EditorProps> = ({
   setGridState,
   gridState,
   setActiveEditor,
+  saveAllStateToLocalStorage,
+  draggedElement,
+  instanceCounters,
 }) => {
   const originalHtml = jsonGridState.content[elementId] || "";
   const [links, setLinks] = useState(() => parseNavLinks(originalHtml));
@@ -148,6 +151,9 @@ const NavInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
       />
     </div>
   );

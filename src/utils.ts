@@ -1,4 +1,3 @@
-import React from "react";
 import { Cell, DraggedElement, JSONGridState, gridSize, DefineStyles } from "./types/canvasTypes";
 
 export function parseStyleString(styleString: string): React.CSSProperties {

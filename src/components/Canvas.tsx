@@ -4,7 +4,8 @@ import { IconButton, Snackbar, TextField } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import Button from "./Button";
 import parse from "html-react-parser";
-let instanceCounters: Record<string, number> = {};
+
+// let instanceCounters: Record<string, number> = {};
 
 import {
   Cell,
@@ -35,6 +36,9 @@ interface ActiveEditor {
 
 export const Canvas: React.FC = () => {
   const GAP = 2;
+  const [instanceCounters, setInstanceCounters] = useState<
+    Record<string, number>
+  >({});
   const [gridState, setGridState] = useState<(Cell | null)[][]>(
     Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
   );
@@ -71,7 +75,7 @@ export const Canvas: React.FC = () => {
           setDraggedElement(parsed.draggedElement);
         }
         if (parsed.instanceCounters) {
-          instanceCounters = { ...parsed.instanceCounters };
+          setInstanceCounters(parsed.instanceCounters);
         }
       } catch (error) {
         console.error("Error parsing saved localStorage data:", error);
@@ -83,7 +87,7 @@ export const Canvas: React.FC = () => {
     updatedGridState: (Cell | null)[][],
     updatedJsonGridState: JSONGridState,
     updatedDraggedElement: DraggedElement | null,
-    updatedInstanceCounters: Object
+    updatedInstanceCounters: object
   ) => {
     const dataToStore = {
       gridState: updatedGridState,
@@ -464,6 +468,9 @@ export const Canvas: React.FC = () => {
                     gridState={gridState}
                     setGridState={setGridState}
                     defaultElementProps={defaultElementProps}
+                    saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+                    instanceCounters={instanceCounters}
+                    draggedElement={draggedElement}
                   />
                 );
               }

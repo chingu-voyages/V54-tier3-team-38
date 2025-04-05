@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { EditorProps } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField, Button } from "@mui/material";
@@ -24,6 +24,9 @@ const UlInputForm: React.FC<EditorProps> = ({
   setActiveEditor,
   gridState,
   setGridState,
+  saveAllStateToLocalStorage,
+  instanceCounters,
+  draggedElement,
 }) => {
   const originalHtml = jsonGridState.content[elementId] || "";
   const [listItems, setListItems] = useState<string[]>(() =>
@@ -131,6 +134,9 @@ const UlInputForm: React.FC<EditorProps> = ({
         jsonGridState={jsonGridState}
         setJsonGridState={setJsonGridState}
         setActiveEditor={setActiveEditor}
+        saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+        draggedElement={draggedElement}
+        instanceCounters={instanceCounters}
       />
     </div>
   );
