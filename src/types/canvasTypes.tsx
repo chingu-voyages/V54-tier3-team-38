@@ -81,7 +81,7 @@ export const defaultElementProps: DefaultElementProps = {
   h1: {
     content: "My Page",
     styles:
-      "background: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 2,
     editor: HeaderInputForm,
@@ -89,7 +89,7 @@ export const defaultElementProps: DefaultElementProps = {
   h2: {
     content: "Welcome to My Page",
     styles:
-      "background: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 2,
     editor: HeaderInputForm,
@@ -97,7 +97,7 @@ export const defaultElementProps: DefaultElementProps = {
   h3: {
     content: "So glad you could visit",
     styles:
-      "background: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 2,
     editor: HeaderInputForm,
@@ -105,7 +105,7 @@ export const defaultElementProps: DefaultElementProps = {
   h4: {
     content: "This is an h4 tag",
     styles:
-      "background: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: white; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 1,
     editor: HeaderInputForm,
@@ -113,7 +113,7 @@ export const defaultElementProps: DefaultElementProps = {
   h5: {
     content: "This is an h5 tag",
     styles:
-      "background: black; color: gray; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: gray; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 1,
     editor: HeaderInputForm,
@@ -121,14 +121,14 @@ export const defaultElementProps: DefaultElementProps = {
   h6: {
     content: "This is an h6 tag",
     styles:
-      "background: black; color: dimgray; text-align: center; position: static; margin: 0; padding: 0;",
+      "background-color: black; color: dimgray; text-align: center; position: static; margin: 0; padding: 0;",
     defaultWidth: 3,
     defaultHeight: 1,
     editor: HeaderInputForm,
   },
   footer: {
     content: "© 2025 Your Company",
-    styles: "background: #222; color: #ccc; text-align: center;",
+    styles: "background-color: #222; color: #ccc; text-align: center;",
     defaultWidth: 6,
     defaultHeight: 2,
     editor: FooterInputForm,
@@ -136,21 +136,21 @@ export const defaultElementProps: DefaultElementProps = {
   nav: {
     content:
       "<a href='#'>Home</a> | <a href='#'>About</a> | <a href='#'>Contact</a>",
-    styles: "background: #333; color: white; text-align: center;",
+    styles: "background-color: #333; color: white; text-align: center;",
     defaultWidth: 6,
     defaultHeight: 2,
     editor: NavInputForm,
   },
   ul: {
     content: "<li>Item 1</li><li>Item 2</li><li>Item 3</li>",
-    styles: "list-style-type: disc;",
+    styles: "list-style-type: disc; background-color: white;",
     defaultWidth: 2,
     defaultHeight: 2,
     editor: UlInputForm,
   },
   button: {
     content: "Click Me",
-    styles: "background: blue; color: white;",
+    styles: "background-color: blue; color: white;",
     defaultWidth: 2,
     defaultHeight: 2,
     editor: ButtonInputForm,

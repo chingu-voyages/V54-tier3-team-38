@@ -368,9 +368,17 @@ export const Canvas: React.FC = () => {
                           width: cell.width * (CELL_SIZE + GAP),
                           height: cell.height * (CELL_SIZE + GAP),
                           ...parsedStyles,
-                          display: "flex",
+                          // display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
+                          justifyContent:
+                            parsedStyles.textAlign === "right"
+                              ? "flex-end"
+                              : parsedStyles.textAlign === "left"
+                                ? "flex-start"
+                                : "center",
+                          backgroundColor:
+                            parsedStyles.backgroundColor || "green",
+                          color: parsedStyles.color || "black",
                           cursor: "pointer",
                           position: "absolute",
                           top: 0,

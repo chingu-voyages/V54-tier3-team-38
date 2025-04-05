@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
-import { EditorProps } from "../types/canvasTypes";
+import { EditorProps, DefineStyles } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
+import ResetStylesButton from "./ResetStylesButton";
+import StyleEditor from "./StyleEditor";
 import { TextField, Button } from "@mui/material";
+import { parseStyleString, styleObjectToCssString } from "../utils";
 
 function parseListItems(htmlString: string): string[] {
   const matchPattern = /<li>(.*?)<\/li>/g;
@@ -27,46 +29,48 @@ const UlInputForm: React.FC<EditorProps> = ({
   saveAllStateToLocalStorage,
   instanceCounters,
   draggedElement,
+  defaultElementProps,
 }) => {
-  const originalHtml = jsonGridState.content[elementId] || "";
-  const [listItems, setListItems] = useState<string[]>(() =>
-    parseListItems(originalHtml)
-  );
-  const [styles, setStyles] = useState(
-    () => jsonGridState.styles[elementId] || ""
-  );
+  const elementType = elementId.split(".")[0];
+  const fallbackContent = defaultElementProps[elementType]?.content ?? "";
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
 
-  // Whenever items or styles change, update JSON state
-  useEffect(() => {
-    const newHtml = buildUlContent(listItems);
+  const content = jsonGridState.content[elementId] || fallbackContent;
+  const listItems = parseListItems(content);
+
+  const parsed = parseStyleString(
+    jsonGridState.styles[elementId] || fallbackStyle
+  ) as Partial<DefineStyles>;
+
+  const parsedStyle: DefineStyles = {
+    backgroundColor: parsed.backgroundColor || "#ffffff",
+    color: parsed.color || "#000000",
+    textAlign: parsed.textAlign || "left",
+  };
+
+  const updateStyle = (key: keyof DefineStyles, value: string) => {
+    const newStyle: DefineStyles = {
+      ...parsedStyle,
+      [key]: value,
+    };
+    setJsonGridState((prev) => ({
+      ...prev,
+      styles: {
+        ...prev.styles,
+        [elementId]: styleObjectToCssString(newStyle),
+      },
+    }));
+  };
+
+  const updateListItems = (items: string[]) => {
+    const newHtml = buildUlContent(items);
     setJsonGridState((prev) => ({
       ...prev,
       content: {
         ...prev.content,
         [elementId]: newHtml,
       },
-      styles: {
-        ...prev.styles,
-        [elementId]: styles,
-      },
     }));
-  }, [listItems, styles, elementId, setJsonGridState]);
-
-  // Handlers for adding/removing/editing list items
-  const handleItemChange = (index: number, newValue: string) => {
-    setListItems((prev) => {
-      const clone = [...prev];
-      clone[index] = newValue;
-      return clone;
-    });
-  };
-
-  const handleAddItem = () => {
-    setListItems((prev) => [...prev, ""]);
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setListItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -93,12 +97,19 @@ const UlInputForm: React.FC<EditorProps> = ({
             label={`List Item #${index + 1}`}
             variant="outlined"
             value={item}
-            onChange={(e) => handleItemChange(index, e.target.value)}
+            onChange={(e) => {
+              const updated = [...listItems];
+              updated[index] = e.target.value;
+              updateListItems(updated);
+            }}
             fullWidth
             margin="normal"
           />
           <Button
-            onClick={() => handleRemoveItem(index)}
+            onClick={() => {
+              const updated = listItems.filter((_, i) => i !== index);
+              updateListItems(updated);
+            }}
             variant="contained"
             color="error"
           >
@@ -108,7 +119,7 @@ const UlInputForm: React.FC<EditorProps> = ({
       ))}
 
       <Button
-        onClick={handleAddItem}
+        onClick={() => updateListItems([...listItems, ""])}
         variant="contained"
         color="primary"
         style={{ marginBottom: "1rem" }}
@@ -116,16 +127,7 @@ const UlInputForm: React.FC<EditorProps> = ({
         + Add List Item
       </Button>
 
-      <TextField
-        label="Styles"
-        variant="outlined"
-        value={styles}
-        onChange={(e) => setStyles(e.target.value)}
-        fullWidth
-        multiline
-        rows={4}
-        margin="normal"
-      />
+      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}
@@ -137,6 +139,13 @@ const UlInputForm: React.FC<EditorProps> = ({
         saveAllStateToLocalStorage={saveAllStateToLocalStorage}
         draggedElement={draggedElement}
         instanceCounters={instanceCounters}
+      />
+
+      <ResetStylesButton
+        elementId={elementId}
+        jsonGridState={jsonGridState}
+        setJsonGridState={setJsonGridState}
+        defaultElementProps={defaultElementProps}
       />
     </div>
   );

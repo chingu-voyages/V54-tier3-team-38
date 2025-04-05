@@ -1,10 +1,9 @@
-import { EditorProps } from "../types/canvasTypes";
+import { EditorProps, DefineStyles } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
 import { TextField } from "@mui/material";
 import StyleEditor from "./StyleEditor";
-import { parseStyleString } from "../utils";
-import { DefineStyles } from "../types/canvasTypes";
-import { styleObjectToCssString } from "../utils";
+import { parseStyleString, styleObjectToCssString } from "../utils";
+import ResetStylesButton from "./ResetStylesButton";
 
 const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
@@ -23,25 +22,21 @@ const ButtonInputForm: React.FC<EditorProps> = ({
   const elementType = elementId.split(".")[0];
   const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
 
-  const parsed = parseStyleString(
+  const parsedStyle = parseStyleString(
     jsonGridState.styles[elementId] || fallbackStyle
-  ) as Partial<DefineStyles>;
-  const parsedStyle: DefineStyles = {
-    backgroundColor: parsed.backgroundColor || "#ffffff",
-    color: parsed.color || "#000000",
-    textAlign: parsed.textAlign || "left",
-  };
+  ) as DefineStyles;
 
   const updateStyle = (key: keyof DefineStyles, value: string) => {
-    const newStyle: DefineStyles = {
+    const updatedStyle = {
       ...parsedStyle,
       [key]: value,
     };
+
     setJsonGridState((prev) => ({
       ...prev,
       styles: {
         ...prev.styles,
-        [elementId]: styleObjectToCssString(newStyle),
+        [elementId]: styleObjectToCssString(updatedStyle),
       },
     }));
   };
@@ -87,6 +82,13 @@ const ButtonInputForm: React.FC<EditorProps> = ({
         saveAllStateToLocalStorage={saveAllStateToLocalStorage}
         draggedElement={draggedElement}
         instanceCounters={instanceCounters}
+      />
+
+      <ResetStylesButton
+        elementId={elementId}
+        jsonGridState={jsonGridState}
+        setJsonGridState={setJsonGridState}
+        defaultElementProps={defaultElementProps}
       />
     </div>
   );
