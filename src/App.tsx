@@ -3,6 +3,7 @@ import { fetchAssets } from "./api/assetApi";
 import { Asset } from "@/types/asset";
 import TestConnection from "./components/TestConnection"; // 👈 import the new component
 import { Canvas } from "./components/Canvas";
+import PreviewAsset from "./components/PreviewAsset";
 
 function App() {
   const [viewCanvas, setViewCanvas] = useState<boolean>(false);
@@ -33,6 +34,7 @@ function App() {
       ) : (
         <div>
           <h1>Testing API Connection</h1>
+          <PreviewAsset />
           <TestConnection /> {/* 👈 background API ping */}
           <p>Check the console for API responses.</p>
           {assetData ? (
