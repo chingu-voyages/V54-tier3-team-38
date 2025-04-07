@@ -4,6 +4,7 @@ import { IconButton, Snackbar, TextField } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import Button from "./Button";
 import parse from "html-react-parser";
+
 import {
   Cell,
   JSONGridState,
@@ -14,7 +15,7 @@ import {
 } from "../types/canvasTypes";
 import {
   parseStyleString,
-  generateJsonGrid, // updated generateJsonGrid accepts extra arguments
+  generateJsonGrid,
   clearOldPositions,
   getCoordinates,
 } from "../utils";
@@ -25,14 +26,18 @@ import {
   handleDrop,
 } from "../dragAndDropHandlers";
 import { postGrid } from "@/api/backendService";
+import PreviewButton from "./PreviewButton";
 
 interface ActiveEditor {
-  id: string; // unique id for this element instance
-  type: string; // e.g., "h2", "footer", etc.
+  id: string;
+  type: string;
 }
 
 export const Canvas: React.FC = () => {
   const GAP = 2;
+  const [instanceCounters, setInstanceCounters] = useState<
+    Record<string, number>
+  >({});
   const [gridState, setGridState] = useState<(Cell | null)[][]>(
     Array.from({ length: gridSize }, () => Array(gridSize).fill(null))
   );
@@ -52,7 +57,6 @@ export const Canvas: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  // Tracks which element's editor should be shown.
   const [activeEditor, setActiveEditor] = useState<ActiveEditor | null>(null);
 
   useEffect(() => {
@@ -69,6 +73,9 @@ export const Canvas: React.FC = () => {
         if (parsed.draggedElement) {
           setDraggedElement(parsed.draggedElement);
         }
+        if (parsed.instanceCounters) {
+          setInstanceCounters(parsed.instanceCounters);
+        }
       } catch (error) {
         console.error("Error parsing saved localStorage data:", error);
       }
@@ -78,12 +85,14 @@ export const Canvas: React.FC = () => {
   const saveAllStateToLocalStorage = (
     updatedGridState: (Cell | null)[][],
     updatedJsonGridState: JSONGridState,
-    updatedDraggedElement: DraggedElement | null
+    updatedDraggedElement: DraggedElement | null,
+    updatedInstanceCounters: object
   ) => {
     const dataToStore = {
       gridState: updatedGridState,
       jsonGridState: updatedJsonGridState,
       draggedElement: updatedDraggedElement,
+      instanceCounters: updatedInstanceCounters,
     };
     try {
       localStorage.setItem("gridEditorState", JSON.stringify(dataToStore));
@@ -104,13 +113,26 @@ export const Canvas: React.FC = () => {
       if (draggedElem.row >= 0 && draggedElem.column >= 0) {
         clearOldPositions(newGrid, draggedElem);
       }
+
+      let uniqueId = draggedElem.id;
+      if (!uniqueId.includes(".")) {
+        const type = uniqueId;
+        if (!(type in instanceCounters)) {
+          instanceCounters[type] = 1;
+        } else {
+          instanceCounters[type] += 1;
+        }
+        uniqueId = `${type}.${instanceCounters[type]}`;
+        draggedElem = { ...draggedElem, id: uniqueId };
+      }
+
       for (let r = 0; r < height; r++) {
         for (let c = 0; c < width; c++) {
           const rowIdx = newRow + r;
           const colIdx = newCol + c;
           if (rowIdx < gridSize && colIdx < gridSize) {
             newGrid[rowIdx][colIdx] = {
-              id: draggedElem.id || "item",
+              id: uniqueId,
               width,
               height,
               row: newRow,
@@ -120,15 +142,35 @@ export const Canvas: React.FC = () => {
           }
         }
       }
-      // Use the existing jsonGridState.content and .styles to preserve edits.
+
+      // Create new copies for content and styles.
+      const newContent = { ...jsonGridState.content };
+      const newStyles = { ...jsonGridState.styles };
+      // Extract base type (e.g. "button" from "button.1")
+      const baseType = uniqueId.split(".")[0];
+
+      // If the new element's content isn't set, assign default content.
+      if (!newContent[uniqueId]) {
+        newContent[uniqueId] = defaultElementProps[baseType]?.content || "";
+      }
+      // If the new element's styles aren't set, assign default styles.
+      if (!newStyles[uniqueId]) {
+        newStyles[uniqueId] = defaultElementProps[baseType]?.styles || "";
+      }
+
       const newJson = generateJsonGrid(
         newGrid,
         defaultElementProps,
-        jsonGridState.content,
-        jsonGridState.styles
+        newContent,
+        newStyles
       );
       setJsonGridState(newJson);
-      saveAllStateToLocalStorage(newGrid, newJson, draggedElement);
+      saveAllStateToLocalStorage(
+        newGrid,
+        newJson,
+        draggedElem,
+        instanceCounters
+      );
       return newGrid;
     });
   }
@@ -240,8 +282,52 @@ export const Canvas: React.FC = () => {
             {gridState.flat().map((cell, i) => {
               const row = Math.floor(i / gridSize);
               const column = i % gridSize;
-              const wrapperElement = cell?.id as React.ElementType;
-              const Wrapper: React.ElementType = wrapperElement || "div";
+
+              if (!cell)
+                return (
+                  <div
+                    key={i}
+                    data-key={i.toString()}
+                    onDrop={(e) =>
+                      handleDrop(
+                        e,
+                        draggedElement,
+                        jsonGridState,
+                        updateGridState,
+                        setDraggedElement
+                      )
+                    }
+                    onDragOver={allowDrop}
+                    style={{
+                      width: CELL_SIZE,
+                      height: CELL_SIZE,
+                      border: "1px solid gray",
+                      boxSizing: "border-box",
+                      backgroundColor: "white",
+                    }}
+                  />
+                );
+
+              const baseType = cell.id.split(".")[0];
+              const Wrapper: React.ElementType =
+                baseType as unknown as React.ElementType;
+
+              const uniqueId =
+                jsonGridState.layout[row] && jsonGridState.layout[row][column]
+                  ? jsonGridState.layout[row][column]
+                  : cell.id;
+
+              const defaultContent =
+                jsonGridState.content[uniqueId] ??
+                defaultElementProps[baseType]?.content ??
+                baseType;
+              const defaultStyleString =
+                jsonGridState.styles[uniqueId] ??
+                defaultElementProps[baseType]?.styles ??
+                "";
+
+              const parsedStyles = parseStyleString(defaultStyleString);
+
               return (
                 <div
                   key={i}
@@ -268,110 +354,103 @@ export const Canvas: React.FC = () => {
                     backgroundColor: "white",
                   }}
                 >
-                  {cell &&
-                    cell.main &&
-                    (() => {
-                      const uniqueId =
-                        jsonGridState.layout[row] &&
-                        jsonGridState.layout[row][column]
-                          ? jsonGridState.layout[row][column]
-                          : cell.id;
-                      const defaultContent =
-                        jsonGridState.content[uniqueId] || cell.id;
-                      const defaultStyleString =
-                        jsonGridState.styles[uniqueId] || "";
-                      const parsedStyles = parseStyleString(defaultStyleString);
-
-                      return (
-                        <Wrapper
-                          draggable={true}
-                          onDragStart={(e: React.DragEvent<HTMLDivElement>) =>
-                            handleDragStart(e, setDraggedElement)
-                          }
-                          onDragOver={allowDrop}
-                          onDrop={(e: React.DragEvent<HTMLDivElement>) =>
-                            handleDrop(
-                              e,
-                              draggedElement,
-                              jsonGridState,
-                              updateGridState,
-                              setDraggedElement
-                            )
-                          }
-                          // When clicked, set this element as active so its editor appears.
-                          onClick={() =>
-                            setActiveEditor({ id: uniqueId, type: cell.id })
-                          }
-                          data-id={cell.id}
-                          data-key={i.toString()}
-                          data-defaultwidth={cell.width}
-                          data-defaultheight={cell.height}
-                          style={{
-                            width: cell.width * (CELL_SIZE + GAP),
-                            height: cell.height * (CELL_SIZE + GAP),
-                            ...parsedStyles,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer", // indicates clickable
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            zIndex: 10,
-                          }}
-                        >
-                          {parse(defaultContent)}
-                          {["left", "right", "top", "bottom"].map((dir) => {
-                            const isHorizontal =
-                              dir === "left" || dir === "right";
-                            return (
-                              <div
-                                key={dir}
-                                data-resizer={dir}
-                                draggable={true}
-                                onDragStart={(e) =>
-                                  handleResizeDrag(e, setDraggedElement)
-                                }
-                                onDragOver={(ev) => ev.preventDefault()}
-                                style={{
-                                  position: "absolute",
-                                  width: isHorizontal ? "8px" : "50%",
-                                  height: isHorizontal ? "50%" : "8px",
-                                  backgroundColor: "grey",
-                                  border: "1px solid black",
-                                  cursor:
-                                    dir === "left" || dir === "right"
-                                      ? "ew-resize"
-                                      : "ns-resize",
-                                  ...(dir === "left" && {
-                                    left: "-4px",
-                                    top: "25%",
-                                  }),
-                                  ...(dir === "right" && {
-                                    right: "-4px",
-                                    top: "25%",
-                                  }),
-                                  ...(dir === "top" && {
-                                    top: "-4px",
-                                    left: "25%",
-                                  }),
-                                  ...(dir === "bottom" && {
-                                    bottom: "-4px",
-                                    left: "25%",
-                                  }),
-                                }}
-                              />
-                            );
-                          })}
-                        </Wrapper>
-                      );
-                    })()}
+                  {cell.main &&
+                    (() => (
+                      <Wrapper
+                        draggable={true}
+                        onDragStart={(e: React.DragEvent<HTMLDivElement>) =>
+                          handleDragStart(e, setDraggedElement)
+                        }
+                        onDragOver={allowDrop}
+                        onDrop={(e: React.DragEvent<HTMLDivElement>) =>
+                          handleDrop(
+                            e,
+                            draggedElement,
+                            jsonGridState,
+                            updateGridState,
+                            setDraggedElement
+                          )
+                        }
+                        onClick={() =>
+                          setActiveEditor({ id: uniqueId, type: baseType })
+                        }
+                        data-id={uniqueId}
+                        data-key={i.toString()}
+                        data-defaultwidth={cell.width}
+                        data-defaultheight={cell.height}
+                        style={{
+                          width: cell.width * (CELL_SIZE + GAP),
+                          height: cell.height * (CELL_SIZE + GAP),
+                          ...parsedStyles,
+                          // display: "flex",
+                          alignItems: "center",
+                          justifyContent:
+                            parsedStyles.textAlign === "right"
+                              ? "flex-end"
+                              : parsedStyles.textAlign === "left"
+                                ? "flex-start"
+                                : "center",
+                          backgroundColor:
+                            parsedStyles.backgroundColor || "green",
+                          color: parsedStyles.color || "black",
+                          cursor: "pointer",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          zIndex: 10,
+                        }}
+                      >
+                        {parse(defaultContent)}
+                        {["left", "right", "top", "bottom"].map((dir) => {
+                          const isHorizontal =
+                            dir === "left" || dir === "right";
+                          return (
+                            <div
+                              key={dir}
+                              data-resizer={dir}
+                              draggable={true}
+                              onDragStart={(e) =>
+                                handleResizeDrag(e, setDraggedElement)
+                              }
+                              onDragOver={(ev) => ev.preventDefault()}
+                              style={{
+                                position: "absolute",
+                                width: isHorizontal ? "8px" : "50%",
+                                height: isHorizontal ? "50%" : "8px",
+                                backgroundColor: "grey",
+                                border: "1px solid black",
+                                cursor:
+                                  dir === "left" || dir === "right"
+                                    ? "ew-resize"
+                                    : "ns-resize",
+                                ...(dir === "left" && {
+                                  left: "-4px",
+                                  top: "25%",
+                                }),
+                                ...(dir === "right" && {
+                                  right: "-4px",
+                                  top: "25%",
+                                }),
+                                ...(dir === "top" && {
+                                  top: "-4px",
+                                  left: "25%",
+                                }),
+                                ...(dir === "bottom" && {
+                                  bottom: "-4px",
+                                  left: "25%",
+                                }),
+                              }}
+                            />
+                          );
+                        })}
+                      </Wrapper>
+                    ))()}
                 </div>
               );
             })}
           </div>
         </div>
-
+        <PreviewButton jsonGridState={jsonGridState} />
         <Snackbar
           open={snackbarOpen}
           message={snackbarMessage}
@@ -410,6 +489,10 @@ export const Canvas: React.FC = () => {
                     setActiveEditor={setActiveEditor}
                     gridState={gridState}
                     setGridState={setGridState}
+                    defaultElementProps={defaultElementProps}
+                    saveAllStateToLocalStorage={saveAllStateToLocalStorage}
+                    instanceCounters={instanceCounters}
+                    draggedElement={draggedElement}
                   />
                 );
               }
