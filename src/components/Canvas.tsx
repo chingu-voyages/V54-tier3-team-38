@@ -42,6 +42,7 @@ export const Canvas: React.FC = () => {
     layout: Array.from({ length: gridSize }, () => Array(gridSize).fill("")),
     content: {},
     styles: {},
+    attributes: {}
   });
 
   const [draggedElement, setDraggedElement] = useState<DraggedElement | null>(
@@ -125,7 +126,8 @@ export const Canvas: React.FC = () => {
         newGrid,
         defaultElementProps,
         jsonGridState.content,
-        jsonGridState.styles
+        jsonGridState.styles,
+        jsonGridState.attributes
       );
       setJsonGridState(newJson);
       saveAllStateToLocalStorage(newGrid, newJson, draggedElement);
