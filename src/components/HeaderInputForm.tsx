@@ -5,44 +5,45 @@ import StyleEditor from "./StyleEditor";
 import { TextField } from "@mui/material";
 import { parseStyleString, styleObjectToCssString } from "../utils";
 
-const FooterInputForm: React.FC<EditorProps> = ({
+const BASE_STYLES = "position: static; margin: 0; padding: 0;";
+
+const HeaderInputForm: React.FC<EditorProps> = ({
   elementId,
   jsonGridState,
   setJsonGridState,
+  setActiveEditor,
   gridState,
   setGridState,
-  setActiveEditor,
-  defaultElementProps,
   saveAllStateToLocalStorage,
   draggedElement,
   instanceCounters,
+  defaultElementProps,
 }) => {
   const elementType = elementId.split(".")[0];
   const fallbackContent = defaultElementProps[elementType]?.content ?? "";
-  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
-
   const content = jsonGridState.content[elementId] || fallbackContent;
-
-  const parsed = parseStyleString(
-    jsonGridState.styles[elementId] || fallbackStyle
-  ) as Partial<DefineStyles>;
-
-  const parsedStyle: DefineStyles = {
-    backgroundColor: parsed.backgroundColor || "#000000",
-    color: parsed.color || "#cccccc",
-    textAlign: parsed.textAlign || "center",
+  const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
+  const currentStyle = jsonGridState.styles[elementId] || fallbackStyle;
+  const strippedStyle = currentStyle.replace(BASE_STYLES, "").trim();
+  const parsedStyle = parseStyleString(strippedStyle) as DefineStyles;
+  const defaultParsedStyle: DefineStyles = {
+    backgroundColor: parsedStyle.backgroundColor || "#ffffff",
+    color: parsedStyle.color || "#000000",
+    textAlign: parsedStyle.textAlign || "center",
   };
 
   const updateStyle = (key: keyof DefineStyles, value: string) => {
-    const newStyle: DefineStyles = {
-      ...parsedStyle,
+    const updatedStyle: DefineStyles = {
+      ...defaultParsedStyle,
       [key]: value,
     };
+    const fullStyle =
+      `${styleObjectToCssString(updatedStyle)} ${BASE_STYLES}`.trim();
     setJsonGridState((prev) => ({
       ...prev,
       styles: {
         ...prev.styles,
-        [elementId]: styleObjectToCssString(newStyle),
+        [elementId]: fullStyle,
       },
     }));
   };
@@ -55,7 +56,7 @@ const FooterInputForm: React.FC<EditorProps> = ({
         padding: "1rem",
       }}
     >
-      <h3>&lt;footer&gt; Editor: {elementId}</h3>
+      <h3>&lt;h1–h6&gt; Editor: {elementId}</h3>
 
       <TextField
         label="Content"
@@ -76,7 +77,7 @@ const FooterInputForm: React.FC<EditorProps> = ({
         margin="normal"
       />
 
-      <StyleEditor style={parsedStyle} updateStyle={updateStyle} />
+      <StyleEditor style={defaultParsedStyle} updateStyle={updateStyle} />
 
       <DeleteElementButton
         elementId={elementId}
@@ -100,4 +101,4 @@ const FooterInputForm: React.FC<EditorProps> = ({
   );
 };
 
-export default FooterInputForm;
+export default HeaderInputForm;

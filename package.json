@@ -18,7 +18,9 @@
     "axios": "^1.8.4",
     "eslint-plugin-react-dom": "^1.36.1",
     "eslint-plugin-react-x": "^1.36.1",
+    "html-react-parser": "^5.2.2",
     "react": "^19.0.0",
+    "react-color": "^2.19.3",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {

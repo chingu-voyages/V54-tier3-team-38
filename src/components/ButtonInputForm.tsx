@@ -1,11 +1,11 @@
 import { EditorProps, DefineStyles } from "../types/canvasTypes";
 import DeleteElementButton from "./DeleteElementButton";
-import ResetStylesButton from "./ResetStylesButton";
-import StyleEditor from "./StyleEditor";
 import { TextField } from "@mui/material";
+import StyleEditor from "./StyleEditor";
 import { parseStyleString, styleObjectToCssString } from "../utils";
+import ResetStylesButton from "./ResetStylesButton";
 
-const FooterInputForm: React.FC<EditorProps> = ({
+const ButtonInputForm: React.FC<EditorProps> = ({
   elementId,
   jsonGridState,
   setJsonGridState,
@@ -17,32 +17,26 @@ const FooterInputForm: React.FC<EditorProps> = ({
   draggedElement,
   instanceCounters,
 }) => {
+  const content = jsonGridState.content[elementId] || "";
+
   const elementType = elementId.split(".")[0];
-  const fallbackContent = defaultElementProps[elementType]?.content ?? "";
   const fallbackStyle = defaultElementProps[elementType]?.styles ?? "";
 
-  const content = jsonGridState.content[elementId] || fallbackContent;
-
-  const parsed = parseStyleString(
+  const parsedStyle = parseStyleString(
     jsonGridState.styles[elementId] || fallbackStyle
-  ) as Partial<DefineStyles>;
-
-  const parsedStyle: DefineStyles = {
-    backgroundColor: parsed.backgroundColor || "#000000",
-    color: parsed.color || "#cccccc",
-    textAlign: parsed.textAlign || "center",
-  };
+  ) as DefineStyles;
 
   const updateStyle = (key: keyof DefineStyles, value: string) => {
-    const newStyle: DefineStyles = {
+    const updatedStyle = {
       ...parsedStyle,
       [key]: value,
     };
+
     setJsonGridState((prev) => ({
       ...prev,
       styles: {
         ...prev.styles,
-        [elementId]: styleObjectToCssString(newStyle),
+        [elementId]: styleObjectToCssString(updatedStyle),
       },
     }));
   };
@@ -55,7 +49,7 @@ const FooterInputForm: React.FC<EditorProps> = ({
         padding: "1rem",
       }}
     >
-      <h3>&lt;footer&gt; Editor: {elementId}</h3>
+      <h3>&lt;Button&gt; Editor: {elementId}</h3>
 
       <TextField
         label="Content"
@@ -100,4 +94,4 @@ const FooterInputForm: React.FC<EditorProps> = ({
   );
 };
 
-export default FooterInputForm;
+export default ButtonInputForm;

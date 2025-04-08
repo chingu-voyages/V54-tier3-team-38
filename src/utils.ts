@@ -1,5 +1,4 @@
-import React from "react";
-import { Cell, DraggedElement, JSONGridState, gridSize } from "./types/canvasTypes";
+import { Cell, DraggedElement, JSONGridState, gridSize, DefineStyles } from "./types/canvasTypes";
 
 export function parseStyleString(styleString: string): React.CSSProperties {
   const style: React.CSSProperties = {};
@@ -31,7 +30,6 @@ export function generateJsonGrid(
   const elementIndices: { [key: string]: number } = {};
   const assignedIndices: { [key: string]: number } = {};
   const layout: string[][] = [];
-  // Start with any existing content/styles.
   const content: { [key: string]: string } = { ...existingContent };
   const styles: { [key: string]: string } = { ...existingStyles };
 
@@ -42,28 +40,34 @@ export function generateJsonGrid(
       if (!cell) {
         layoutRow.push("");
       } else {
-        const elementId = cell.id;
-        const instanceKey = `${elementId}-${cell.row},${cell.column}`;
-        if (!(instanceKey in assignedIndices)) {
-          if (!(elementId in elementIndices)) {
-            elementIndices[elementId] = 0;
-          } else {
-            elementIndices[elementId] += 1;
-          }
-          assignedIndices[instanceKey] = elementIndices[elementId];
-          const uniqueId = `${elementId}.${assignedIndices[instanceKey]}`;
+        if (cell.id.includes(".")) {
+          layoutRow.push(cell.id);
+        } else {
+          const elementId = cell.id;
+          const instanceKey = `${elementId}-${cell.row},${cell.column}`;
+          if (!(instanceKey in assignedIndices)) {
+            if (!(elementId in elementIndices)) {
+              elementIndices[elementId] = 0;
+            } else {
+              elementIndices[elementId] += 1;
+            }
+            assignedIndices[instanceKey] = elementIndices[elementId];
+            const uniqueId = `${elementId}.${assignedIndices[instanceKey]}`;
 
-          // Preserve any existing custom content or styles, otherwise fallback to defaults.
-          content[uniqueId] =
-            existingContent[uniqueId] !== undefined
-              ? existingContent[uniqueId]
-              : defaultElementProps[elementId]?.content || "";
-          styles[uniqueId] =
-            existingStyles[uniqueId] !== undefined
-              ? existingStyles[uniqueId]
-              : defaultElementProps[elementId]?.styles || "";
+            content[uniqueId] =
+              existingContent[uniqueId] !== undefined
+                ? existingContent[uniqueId]
+                : defaultElementProps[elementId]?.content || "";
+            styles[uniqueId] =
+              existingStyles[uniqueId] !== undefined
+                ? existingStyles[uniqueId]
+                : defaultElementProps[elementId]?.styles || "";
+
+            layoutRow.push(uniqueId);
+          } else {
+            layoutRow.push(`${elementId}.${assignedIndices[instanceKey]}`);
+          }
         }
-        layoutRow.push(`${elementId}.${assignedIndices[instanceKey]}`);
       }
     }
     layout.push(layoutRow);
@@ -78,22 +82,19 @@ export function generateJsonGrid(
 }
 
 
+
 export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
   const layout = json.layout;
   const rows = layout.length;
   const cols = layout[0]?.length || 0;
-
-  // Initialize the grid with null values.
   const grid: (Cell | null)[][] = Array.from({ length: rows }, () =>
     Array(cols).fill(null)
   );
 
-  // Track which cells have been processed.
   const visited: boolean[][] = Array.from({ length: rows }, () =>
     Array(cols).fill(false)
   );
 
-  // Loop over each cell in the layout.
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
       if (visited[i][j]) continue;
@@ -104,12 +105,10 @@ export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
       }
 
       const [elementId] = cellValue.split(".");
-      // Determine width
       let width = 1;
       while (j + width < cols && layout[i][j + width] === cellValue) {
         width++;
       }
-      // Determine height
       let height = 1;
       outer: while (i + height < rows) {
         for (let k = 0; k < width; k++) {
@@ -138,8 +137,11 @@ export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
   }
   return grid;
 }
-
-
+export function styleObjectToCssString(styleObj: DefineStyles): string {
+  return Object.entries(styleObj)
+    .map(([key, value]) => `${key}: ${value};`)
+    .join(" ");
+}
 export function clearOldPositions(grid: (Cell | null)[][], draggedElem: DraggedElement) {
   const { row, column, width, height } = draggedElem;
   if (row < 0 || column < 0) return;
