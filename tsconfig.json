@@ -16,10 +16,11 @@
     "baseUrl": "src/",
     "paths": {
       "@/*": ["./*"],
-      "@/types/*": ["types/*"],
-      "@/api/*": ["api/*"],
-      "@/components/*": ["components/*"],
-      "@/assets/*": ["assets/*"]
+      "@types/*": ["types/*"],
+      "@api/*": ["api/*"],
+      "@components/*": ["components/*"],
+      "@assets/*": ["assets/*"],
+      "@hooks/*": ["hooks/*"],
     }
   },
   "include": ["src", "vite-env.d.ts", "**/*.ts", "**/*.tsx"],

@@ -3,7 +3,11 @@ import { Asset } from "@/types/asset";
 
 // Create a new asset
 export const createAsset = async (assetData: FormData): Promise<Asset> => {
-  const response = await api.post<Asset>("/assets/", assetData);
+  const response = await api.post<Asset>("/api/assets/", assetData, {
+    headers: {
+      "Content-Type": "multipart/form-data", 
+    },
+  });
   return response.data;
 };
 
@@ -12,13 +16,13 @@ export const deleteAsset = async (assetId: number): Promise<void> => {
   await api.delete(`/assets/${assetId}`);
 };
 
-export const fetchAssets = async (): Promise<Asset | null> => {
+export const fetchAssets = async (): Promise<Asset[]> => {
   try {
-    const response = await api.get<Asset>("/api/assets/");
+    const response = await api.get<Asset[]>("/api/assets/");
     console.log("✅ Assets Data Fetched:", response.data);
     return response.data;
   } catch (error) {
     console.error("❌ Assets Data Fetch Failed:", error);
-    return null;
+    return []; // Return an empty array if there's an error
   }
-}
+};
