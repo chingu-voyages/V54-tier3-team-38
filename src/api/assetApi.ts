@@ -3,7 +3,11 @@ import { Asset } from "@/types/asset";
 
 // Create a new asset
 export const createAsset = async (assetData: FormData): Promise<Asset> => {
-  const response = await api.post<Asset>("/assets/", assetData);
+  const response = await api.post<Asset>("/api/assets/", assetData, {
+    headers: {
+      "Content-Type": "multipart/form-data", 
+    },
+  });
   return response.data;
 };
 
