@@ -310,7 +310,9 @@ export const Canvas: React.FC = () => {
 
               const baseType = cell.id.split(".")[0];
               const Wrapper: React.ElementType =
-                baseType as unknown as React.ElementType;
+                baseType === "a"
+                  ? "div"
+                  : (baseType as unknown as React.ElementType);
 
               const uniqueId =
                 jsonGridState.layout[row] && jsonGridState.layout[row][column]
@@ -391,7 +393,7 @@ export const Canvas: React.FC = () => {
                                 ? "flex-start"
                                 : "center",
                           backgroundColor:
-                            parsedStyles.backgroundColor || "green",
+                            parsedStyles.backgroundColor || "white",
                           color: parsedStyles.color || "black",
                           cursor: "pointer",
                           position: "absolute",

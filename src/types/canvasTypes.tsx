@@ -4,6 +4,7 @@ import FooterInputForm from "../components/FooterInputForm";
 import NavInputForm from "../components/NavInputForm";
 import UlInputForm from "../components/UlInputForm";
 import ButtonInputForm from "../components/ButtonInputForm";
+import AInputForm from "../components/AInputForm";
 
 export interface Cell {
   id: string;
@@ -153,5 +154,12 @@ export const defaultElementProps: DefaultElementProps = {
     defaultWidth: 2,
     defaultHeight: 2,
     editor: ButtonInputForm,
+  },
+  a: {
+    content: "Google",
+    styles: "background: white; color: blue;",
+    defaultWidth: 3,
+    defaultHeight: 1,
+    editor: AInputForm,
   },
 };
