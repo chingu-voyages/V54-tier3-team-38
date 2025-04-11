@@ -12,8 +12,8 @@ export const createAsset = async (assetData: FormData): Promise<Asset> => {
 };
 
 // Optionally: Update / Delete functions...
-export const deleteAsset = async (assetId: number): Promise<void> => {
-  await api.delete(`/assets/${assetId}`);
+export const deleteAsset = async (id: number): Promise<void> => {
+  await api.delete(`/api/assets/${id}/`);
 };
 
 export const fetchAssets = async (): Promise<Asset[]> => {

@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Asset } from '@/types/asset';
+import DeleteAssetButton from './DeketeAsset';
 
 const PreviewAsset = () => {
   const assets: Asset[] = useSelector((state: any) => state.viewAsset);
@@ -17,6 +18,7 @@ const PreviewAsset = () => {
           />
           <p className="font-bold">{asset.name}</p>
           <p>{asset.description}</p>
+          <DeleteAssetButton asset={asset} assets={assets} />
         </div>
       ))}
     </div>
