@@ -21,6 +21,7 @@
       "@components/*": ["components/*"],
       "@assets/*": ["assets/*"],
       "@hooks/*": ["hooks/*"],
+      "reducers/*": ["reducers/*"],
     }
   },
   "include": ["src", "vite-env.d.ts", "**/*.ts", "**/*.tsx"],
