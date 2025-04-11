@@ -1,11 +1,10 @@
-// src/components/PreviewAsset.tsx
-import { useAssets } from '@/hooks/useAssets'; // or wherever your hook lives
+import { useSelector } from 'react-redux';
+import { Asset } from '@/types/asset';
 
 const PreviewAsset = () => {
-  const { assets, isLoading, error } = useAssets();
+  const assets: Asset[] = useSelector((state: any) => state.viewAsset);
 
-  if (isLoading) return <p>Loading assets...</p>;
-  if (error) return <p>Error loading assets!</p>;
+  if (!assets.length) return <p>Loading assets...</p>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
