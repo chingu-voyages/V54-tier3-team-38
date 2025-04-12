@@ -6,9 +6,9 @@ import { parseStyleString } from "@/utils";
 interface PreviewButtonProps {
   jsonGridState: JSONGridState;
 }
+
 function convertCamelToCss(style: Partial<DefineStyles>): string {
   const mappedStyle: Record<string, string> = {};
-
   for (const key in style) {
     const value = style[key as keyof DefineStyles];
     if (!value) continue;
@@ -16,10 +16,8 @@ function convertCamelToCss(style: Partial<DefineStyles>): string {
     if (key === "backgroundColor") cssKey = "background";
     else if (key === "textAlign") cssKey = "text-align";
     else cssKey = key.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
-
     mappedStyle[cssKey] = value;
   }
-
   return Object.entries(mappedStyle)
     .map(([k, v]) => `${k}: ${v};`)
     .join(" ");
@@ -30,6 +28,7 @@ const PreviewButton: React.FC<PreviewButtonProps> = ({ jsonGridState }) => {
     const layout = jsonGridState.layout;
     const content = jsonGridState.content || {};
     const styles = jsonGridState.styles || {};
+    const attributes = jsonGridState.attributes || {};
     const resolution = jsonGridState.resolution;
 
     if (!resolution || !resolution.width || !resolution.height) {
@@ -48,12 +47,11 @@ const PreviewButton: React.FC<PreviewButtonProps> = ({ jsonGridState }) => {
     const tagSet = new Set<string>();
     const boundingBoxes: Record<string, any> = {};
 
-    // First pass - bounding boxes
+    // First pass – determine bounding boxes.
     for (let i = 0; i < numRows; i++) {
       for (let j = 0; j < numCols; j++) {
         const key = layout[i][j];
         if (!key) continue;
-
         if (!boundingBoxes[key]) {
           boundingBoxes[key] = {
             minRow: i,
@@ -73,37 +71,34 @@ const PreviewButton: React.FC<PreviewButtonProps> = ({ jsonGridState }) => {
     const renderedKeys = new Set<string>();
     let elementsHtml = "";
 
-    // Second pass - render elements
+    // Second pass – generate HTML for each element.
     for (let i = 0; i < numRows; i++) {
       for (let j = 0; j < numCols; j++) {
         const key = layout[i][j];
         const top = i * cellHeight;
         const left = j * cellWidth;
-
         if (!key) {
           elementsHtml += `<div style="position:absolute;top:${top}px;left:${left}px;width:${cellWidth}px;height:${cellHeight}px;"></div>`;
           continue;
         }
-
         if (renderedKeys.has(key)) continue;
-
         const box = boundingBoxes[key];
         const tag = key.split(".")[0];
         tagSet.add(tag);
-
         const mergedTop = box.minRow * cellHeight;
         const mergedLeft = box.minCol * cellWidth;
         const mergedWidth = (box.maxCol - box.minCol + 1) * cellWidth;
         const mergedHeight = (box.maxRow - box.minRow + 1) * cellHeight;
-
         const userStyle = styles[key] || "";
         const baseStyle = `position:absolute;top:${mergedTop}px;left:${mergedLeft}px;width:${mergedWidth}px;height:${mergedHeight}px;margin:0;display:block;`;
         const finalStyle =
           `${convertCamelToCss(parseStyleString(userStyle))} ${baseStyle}`.trim();
-
         const inner = content[key] || "";
-        elementsHtml += `<${tag} style="${finalStyle}">${inner}</${tag}>`;
-
+        // If attributes exist, include them as a raw string in the tag.
+        const extraAttributes = attributes[key]?.trim()
+          ? attributes[key].trim() + " "
+          : "";
+        elementsHtml += `<${tag} ${extraAttributes}style="${finalStyle}">${inner}</${tag}>`;
         renderedKeys.add(key);
       }
     }

@@ -38,6 +38,7 @@ export interface JSONGridState {
   layout: string[][];
   content: { [key: string]: string };
   styles: { [key: string]: string };
+  attributes: { [key: string]: string };
 }
 export interface DefineStyles {
   backgroundColor: string;

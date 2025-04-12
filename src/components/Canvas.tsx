@@ -47,6 +47,7 @@ export const Canvas: React.FC = () => {
     layout: Array.from({ length: gridSize }, () => Array(gridSize).fill("")),
     content: {},
     styles: {},
+    attributes: {},
   });
 
   const [draggedElement, setDraggedElement] = useState<DraggedElement | null>(
@@ -143,10 +144,12 @@ export const Canvas: React.FC = () => {
         }
       }
 
-      // Create new copies for content and styles.
+      // Create new copies for content, styles, and attributes.
       const newContent = { ...jsonGridState.content };
       const newStyles = { ...jsonGridState.styles };
-      // Extract base type (e.g. "button" from "button.1")
+      const newAttributes = { ...jsonGridState.attributes };
+
+      // Extract the base type (e.g. "button" from "button.1")
       const baseType = uniqueId.split(".")[0];
 
       // If the new element's content isn't set, assign default content.
@@ -157,12 +160,20 @@ export const Canvas: React.FC = () => {
       if (!newStyles[uniqueId]) {
         newStyles[uniqueId] = defaultElementProps[baseType]?.styles || "";
       }
+      // If the new element's attributes aren't set, assign a default.
+      if (!newAttributes[uniqueId]) {
+        newAttributes[uniqueId] =
+          baseType === "a" ? `href="https://www.google.com"` : "";
+      }
 
+      // Update your JSON grid state.
+      // (Make sure to update your generateJsonGrid function to accept the attributes as a 5th parameter.)
       const newJson = generateJsonGrid(
         newGrid,
         defaultElementProps,
         newContent,
-        newStyles
+        newStyles,
+        newAttributes
       );
       setJsonGridState(newJson);
       saveAllStateToLocalStorage(

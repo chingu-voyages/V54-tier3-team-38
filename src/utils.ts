@@ -25,13 +25,15 @@ export function generateJsonGrid(
   grid: (Cell | null)[][],
   defaultElementProps: { [key: string]: { content: string; styles: string } },
   existingContent: { [key: string]: string } = {},
-  existingStyles: { [key: string]: string } = {}
+  existingStyles: { [key: string]: string } = {},
+  existingAttributes: { [key: string]: string } = {}
 ): JSONGridState {
   const elementIndices: { [key: string]: number } = {};
   const assignedIndices: { [key: string]: number } = {};
   const layout: string[][] = [];
   const content: { [key: string]: string } = { ...existingContent };
   const styles: { [key: string]: string } = { ...existingStyles };
+  const attributes: { [key: string]: string } = { ...existingAttributes };
 
   for (let i = 0; i < grid.length; i++) {
     const layoutRow: string[] = [];
@@ -62,7 +64,13 @@ export function generateJsonGrid(
               existingStyles[uniqueId] !== undefined
                 ? existingStyles[uniqueId]
                 : defaultElementProps[elementId]?.styles || "";
-
+            attributes[uniqueId] =
+              existingAttributes[uniqueId] !== undefined
+                ? existingAttributes[uniqueId]
+                : elementId === "a"
+                ? `href="https://www.google.com"`
+                : "";
+                
             layoutRow.push(uniqueId);
           } else {
             layoutRow.push(`${elementId}.${assignedIndices[instanceKey]}`);
@@ -78,9 +86,9 @@ export function generateJsonGrid(
     layout,
     content,
     styles,
+    attributes,
   };
 }
-
 
 
 export function parseJsonGrid(json: JSONGridState): (Cell | null)[][] {
