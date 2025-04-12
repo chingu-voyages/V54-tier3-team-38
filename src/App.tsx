@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchAssets } from "./api/assetApi";
 import { Asset } from "@/types/asset";
-import TestConnection from "./components/TestConnection"; // 
+import TestConnection from "./components/TestConnection"; //
 import { Canvas } from "./components/Canvas";
 import PreviewAsset from "./components/PreviewAsset";
-import CreateAsset from "./components/CreateAsset"; // 
+import CreateAsset from "./components/CreateAsset"; //
+import PageList from "./components/PageList";
 
 function App() {
   const [viewCanvas, setViewCanvas] = useState<boolean>(false);
@@ -34,6 +35,7 @@ function App() {
         </div>
       ) : (
         <div>
+          <PageList />
           <h1>Testing API Connection</h1>
           <PreviewAsset />
           <CreateAsset />

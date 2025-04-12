@@ -413,7 +413,12 @@ export const Canvas: React.FC = () => {
                           zIndex: 10,
                         }}
                       >
-                        {parse(defaultContent)}
+                        {parse(
+                          defaultContent.replace(
+                            /<a /,
+                            '<a style="pointer-events: none;" '
+                          )
+                        )}
                         {["left", "right", "top", "bottom"].map((dir) => {
                           const isHorizontal =
                             dir === "left" || dir === "right";
