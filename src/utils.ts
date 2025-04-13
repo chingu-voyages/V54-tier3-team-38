@@ -185,12 +185,20 @@ export function convertCamelToCss(style: Partial<DefineStyles>): string {
 }
 
 export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
-  const { layout, content, styles, attributes, resolution } = jsonGridState;
+  const {
+    layout,
+    content = {},
+    styles = {},
+    attributes = {}, // ✅ now safe if undefined
+    resolution = { width: 1920, height: 1080 },
+  } = jsonGridState;
+
   const { width: screenWidth, height: screenHeight } = resolution;
   const numRows = layout.length;
   const numCols = layout[0]?.length || 0;
   const cellHeight = Math.floor(screenHeight / numRows);
   const cellWidth = Math.floor(screenWidth / numCols);
+
 
   const boundingBoxes: Record<string, { minRow: number; maxRow: number; minCol: number; maxCol: number; }> = {};
   const renderedKeys = new Set<string>();
