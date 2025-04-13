@@ -23,15 +23,18 @@ export function getCoordinates(cellNumber: number): { row: number; column: numbe
 
 export function generateJsonGrid(
   grid: (Cell | null)[][],
-  defaultElementProps: { [key: string]: { content: string; styles: string } },
+  defaultElementProps: { [key: string]: { content: string; styles: string; attributes?: string } },
   existingContent: { [key: string]: string } = {},
-  existingStyles: { [key: string]: string } = {}
+  existingStyles: { [key: string]: string } = {},
+  existingAttributes: { [key: string]: string } = {},
 ): JSONGridState {
   const elementIndices: { [key: string]: number } = {};
   const assignedIndices: { [key: string]: number } = {};
   const layout: string[][] = [];
+  // Start with any existing content/styles/attributes.
   const content: { [key: string]: string } = { ...existingContent };
   const styles: { [key: string]: string } = { ...existingStyles };
+  const attributes: { [key: string]: string } = { ...existingAttributes };
 
   for (let i = 0; i < grid.length; i++) {
     const layoutRow: string[] = [];
@@ -54,6 +57,7 @@ export function generateJsonGrid(
             assignedIndices[instanceKey] = elementIndices[elementId];
             const uniqueId = `${elementId}.${assignedIndices[instanceKey]}`;
 
+            // Preserve any existing custom content or styles, otherwise fallback to defaults.
             content[uniqueId] =
               existingContent[uniqueId] !== undefined
                 ? existingContent[uniqueId]
@@ -62,11 +66,12 @@ export function generateJsonGrid(
               existingStyles[uniqueId] !== undefined
                 ? existingStyles[uniqueId]
                 : defaultElementProps[elementId]?.styles || "";
-
-            layoutRow.push(uniqueId);
-          } else {
-            layoutRow.push(`${elementId}.${assignedIndices[instanceKey]}`);
-          }
+            attributes[uniqueId] =
+              existingAttributes[uniqueId] !== undefined
+                ? existingAttributes[uniqueId]
+                : defaultElementProps[elementId]?.attributes || "";
+          }  // <-- Added missing closing brace for if (!(instanceKey in assignedIndices))
+          // Optionally, you might want to push something to layoutRow here if needed.
         }
       }
     }
@@ -78,6 +83,7 @@ export function generateJsonGrid(
     layout,
     content,
     styles,
+    attributes
   };
 }
 
