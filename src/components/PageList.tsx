@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { List, ListItemButton, ListItemText } from "@mui/material";
-import { generateHTMLFromJSONGrid } from "../utils"; // Adjust path as needed
+import { generateHTMLFromJSONGrid } from "../utils";
 
-// Define the type for a page as returned from the API
 interface PageData {
   id: number | string;
   name: string;
   description: string;
-  data: any; // This represents your JSONGridState
+  data: any;
   created_at: string;
 }
 

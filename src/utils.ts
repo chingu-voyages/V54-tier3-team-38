@@ -185,38 +185,23 @@ export function convertCamelToCss(style: Partial<DefineStyles>): string {
 }
 
 export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
-  const layout = jsonGridState.layout;
-  const content = jsonGridState.content || {};
-  const styles = jsonGridState.styles || {};
-  const attributes = jsonGridState.attributes || {};
-  const resolution = jsonGridState.resolution;
-
-  if (!resolution || !resolution.width || !resolution.height) {
-    throw new Error("Missing resolution information. Please provide { width, height }.");
-  }
-
-  const screenWidth = resolution.width;
-  const screenHeight = resolution.height;
+  const { layout, content, styles, attributes, resolution } = jsonGridState;
+  const { width: screenWidth, height: screenHeight } = resolution;
   const numRows = layout.length;
-  const numCols = layout[0].length;
+  const numCols = layout[0]?.length || 0;
   const cellHeight = Math.floor(screenHeight / numRows);
   const cellWidth = Math.floor(screenWidth / numCols);
 
-  const tagSet = new Set<string>();
   const boundingBoxes: Record<string, { minRow: number; maxRow: number; minCol: number; maxCol: number; }> = {};
+  const renderedKeys = new Set<string>();
+  let elementsHtml = "";
 
-  // First pass – determine bounding boxes.
   for (let i = 0; i < numRows; i++) {
     for (let j = 0; j < numCols; j++) {
       const key = layout[i][j];
       if (!key) continue;
       if (!boundingBoxes[key]) {
-        boundingBoxes[key] = {
-          minRow: i,
-          maxRow: i,
-          minCol: j,
-          maxCol: j,
-        };
+        boundingBoxes[key] = { minRow: i, maxRow: i, minCol: j, maxCol: j };
       } else {
         boundingBoxes[key].minRow = Math.min(boundingBoxes[key].minRow, i);
         boundingBoxes[key].maxRow = Math.max(boundingBoxes[key].maxRow, i);
@@ -226,39 +211,31 @@ export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
     }
   }
 
-  const renderedKeys = new Set<string>();
-  let elementsHtml = "";
+  for (const key of Object.keys(boundingBoxes)) {
+    if (renderedKeys.has(key)) continue;
+    renderedKeys.add(key);
 
-  // Second pass – generate HTML for each element.
-  for (let i = 0; i < numRows; i++) {
-    for (let j = 0; j < numCols; j++) {
-      const key = layout[i][j];
-      const top = i * cellHeight;
-      const left = j * cellWidth;
-      if (!key) {
-        elementsHtml += `<div style="position:absolute;top:${top}px;left:${left}px;width:${cellWidth}px;height:${cellHeight}px;"></div>`;
-        continue;
-      }
-      if (renderedKeys.has(key)) continue;
-      const box = boundingBoxes[key];
-      const tag = key.split(".")[0];
-      tagSet.add(tag);
-      const mergedTop = box.minRow * cellHeight;
-      const mergedLeft = box.minCol * cellWidth;
-      const mergedWidth = (box.maxCol - box.minCol + 1) * cellWidth;
-      const mergedHeight = (box.maxRow - box.minRow + 1) * cellHeight;
-      const userStyle = styles[key] || "";
-      const baseStyle = `position:absolute;top:${mergedTop}px;left:${mergedLeft}px;width:${mergedWidth}px;height:${mergedHeight}px;margin:0;display:block;`;
-      const finalStyle = `${convertCamelToCss(parseStyleString(userStyle))} ${baseStyle}`.trim();
-      const inner = content[key] || "";
-      // If attributes exist, include them as a raw string in the tag.
-      const extraAttributes = attributes[key]?.trim() ? attributes[key].trim() + " " : "";
-      elementsHtml += `<${tag} ${extraAttributes}style="${finalStyle}">${inner}</${tag}>`;
-      renderedKeys.add(key);
-    }
+    const tag = key.split(".")[0];
+    const box = boundingBoxes[key];
+    const mergedTop = box.minRow * cellHeight;
+    const mergedLeft = box.minCol * cellWidth;
+    const mergedWidth = (box.maxCol - box.minCol + 1) * cellWidth;
+    const mergedHeight = (box.maxRow - box.minRow + 1) * cellHeight;
+
+    const userStyle = styles[key] || "";
+    const baseStyle = `position:absolute;top:${mergedTop}px;left:${mergedLeft}px;width:${mergedWidth}px;height:${mergedHeight}px;margin:0;display:block;`;
+    const finalStyle = `${convertCamelToCss(parseStyleString(userStyle))} ${baseStyle}`.trim();
+
+    const rawContent = (content[key] || "").trim();
+    const extraAttributes = attributes[key]?.trim() || "";
+
+    const elementHtml =
+      tag === "a"
+        ? `<a ${extraAttributes} style="${finalStyle}">${rawContent}</a>`
+        : `<${tag} style="${finalStyle}">${rawContent}</${tag}>`;
+
+    elementsHtml += elementHtml;
   }
-
-  const tagStyleRule = Array.from(tagSet).join(", ") + " { display: block; }";
 
   return `<!DOCTYPE html>
 <html>
@@ -267,17 +244,8 @@ export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview</title>
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        overflow: auto;
-      }
-      .container {
-        position: relative;
-        width: ${screenWidth}px;
-        height: ${screenHeight}px;
-      }
-      ${tagStyleRule}
+      html, body { margin: 0; padding: 0; overflow: auto; }
+      .container { position: relative; width: ${screenWidth}px; height: ${screenHeight}px; }
     </style>
   </head>
   <body>
@@ -286,4 +254,36 @@ export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
     </div>
   </body>
 </html>`;
+}
+
+
+export function findCell(
+  gridState: (Cell | null)[][],
+  elementId: string
+): Cell | null {
+  for (const row of gridState) {
+    for (const cell of row) {
+      if (cell && cell.id === elementId && cell.main) {
+        return cell;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns an absolute-position CSS string for a grid cell.
+ */
+export function makePositionStyle(
+  row: number,
+  col: number,
+  width: number,
+  height: number,
+  cellSize: number
+): string {
+  const top = row * cellSize;
+  const left = col * cellSize;
+  const w = width * cellSize;
+  const h = height * cellSize;
+  return `position:absolute;top:${top}px;left:${left}px;width:${w}px;height:${h}px;margin:0;display:block;`;
 }
