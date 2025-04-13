@@ -35,6 +35,7 @@ const PageList: React.FC = () => {
   const handleOpenPage = (page: PageData) => {
     try {
       // Here, page.data is assumed to be the saved JSONGridState.
+      console.log("🔍 Page Data:", page.data);
       const html = generateHTMLFromJSONGrid(page.data);
       const newWindow = window.open("", "_blank");
       if (newWindow) {
