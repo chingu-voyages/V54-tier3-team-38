@@ -238,9 +238,10 @@ export function generateHTMLFromJSONGrid(jsonGridState: JSONGridState): string {
     const extraAttributes = attributes[key]?.trim() || "";
 
     const elementHtml =
-      tag === "a"
-        ? `<a ${extraAttributes} style="${finalStyle}">${rawContent}</a>`
-        : `<${tag} style="${finalStyle}">${rawContent}</${tag}>`;
+    tag === "a"
+      ? `<div style="${finalStyle}">${rawContent}</div>` // ✅ safe wrapper
+      : `<${tag} style="${finalStyle}">${rawContent}</${tag}>`;
+  
 
     elementsHtml += elementHtml;
   }

@@ -21,6 +21,9 @@ const AInputForm: React.FC<EditorProps> = ({
   defaultElementProps,
   saveAllStateToLocalStorage,
 }) => {
+  const buildAnchorContent = (href: string, text: string) =>
+    `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+
   const elementType = elementId.split(".")[0];
   const fallbackContent = defaultElementProps[elementType]?.content || "";
   const fallbackStyle = defaultElementProps[elementType]?.styles || "";
@@ -49,9 +52,18 @@ const AInputForm: React.FC<EditorProps> = ({
 
     setJsonGridState((prev) => ({
       ...prev,
-      content: { ...prev.content, [elementId]: text },
-      styles: { ...prev.styles, [elementId]: `${posCss} ${userStyle}`.trim() },
-      attributes: { ...prev.attributes, [elementId]: `href="${href}"` },
+      content: {
+        ...prev.content,
+        [elementId]: buildAnchorContent(href, text), // ✅ use wrapper
+      },
+      styles: {
+        ...prev.styles,
+        [elementId]: `${posCss} ${userStyle}`.trim(),
+      },
+      attributes: {
+        ...prev.attributes,
+        [elementId]: `href="${href}"`,
+      },
     }));
   };
 
