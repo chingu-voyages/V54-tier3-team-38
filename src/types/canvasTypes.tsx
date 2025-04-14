@@ -4,6 +4,7 @@ import FooterInputForm from "../components/FooterInputForm";
 import NavInputForm from "../components/NavInputForm";
 import UlInputForm from "../components/UlInputForm";
 import ButtonInputForm from "../components/ButtonInputForm";
+import AInputForm from "@/components/AInputForm";
 
 export interface Cell {
   id: string;
@@ -37,6 +38,7 @@ export interface JSONGridState {
   layout: string[][];
   content: { [key: string]: string };
   styles: { [key: string]: string };
+  attributes: {[key: string]: string };
 }
 export interface DefineStyles {
   backgroundColor: string;
@@ -69,6 +71,7 @@ export interface ElementDefinition {
   defaultWidth: number;
   defaultHeight: number;
   editor?: ComponentType<EditorProps>;
+  attributes?: string;
 }
 
 // All element definitions
@@ -154,4 +157,12 @@ export const defaultElementProps: DefaultElementProps = {
     defaultHeight: 2,
     editor: ButtonInputForm,
   },
+  a: {
+    content: "Google",
+    styles: "background: white; color: blue;",
+    defaultWidth: 3,
+    defaultHeight: 1,
+    editor: AInputForm,
+    attributes: "href.http://www.google.com/"
+  }
 };

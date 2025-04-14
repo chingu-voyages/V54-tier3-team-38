@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux"; // ✅ include useSelector
 import { createAsset } from "@/api/assetApi";
 import { Asset } from "@/types/asset";
 
@@ -6,6 +7,9 @@ const CreateAsset = () => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [image, setImage] = useState<File | null>(null);
+  const dispatch = useDispatch();
+
+  const currentAssets = useSelector((state: any) => state.viewAsset); // ✅ grab current viewAsset
 
   const handleCreate = async () => {
     if (!image) {
@@ -19,8 +23,13 @@ const CreateAsset = () => {
     formData.append("image", image);
 
     try {
-      const response = await createAsset(formData);
-      console.log("✅ New Asset Created:", response);
+      const newAsset = await createAsset(formData);
+
+      // ✅ Dispatch to reducer
+      dispatch({ type: "CREATE_ASSET", payload: newAsset });
+      dispatch({ type: "VIEW_ASSET", payload: [...currentAssets, newAsset] });
+
+      console.log("✅ New Asset Created:", newAsset);
     } catch (error) {
       console.error("❌ Asset Creation Failed:", error);
     }
